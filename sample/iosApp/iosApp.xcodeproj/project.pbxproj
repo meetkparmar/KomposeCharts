@@ -60,10 +60,10 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A11C5C0A2B21E00000A2784C /* Build configuration list for PBXNativeTarget "iosApp" */;
 			buildPhases = (
+				A11C5C0D2B21E00000A2784C /* ShellScript */,
 				A11C5BF82B21E00000A2784C /* Sources */,
 				A11C5BF92B21E00000A2784C /* Frameworks */,
 				A11C5BFA2B21E00000A2784C /* Resources */,
-				A11C5C0D2B21E00000A2784C /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -267,6 +267,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -294,6 +298,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
