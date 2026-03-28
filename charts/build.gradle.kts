@@ -38,7 +38,9 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)
+            implementation(compose.material3)
             implementation(project(":core"))
+            implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
