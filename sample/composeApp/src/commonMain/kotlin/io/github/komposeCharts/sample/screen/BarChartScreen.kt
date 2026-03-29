@@ -22,19 +22,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.komposeCharts.charts.BarChart
-import io.github.komposeCharts.core. data.ChartData
+import io.github.komposeCharts.core.data.ChartData
 import io.github.komposeCharts.core.data.DataPoint
 import io.github.komposeCharts.core.data.DataSeries
 import io.github.komposeCharts.style.BarChartStyle
 import io.github.komposeCharts.style.BarGrouping
 import io.github.komposeCharts.style.BarOrientation
+import io.github.komposeCharts.style.LegendPosition
+import io.github.komposeCharts.style.LegendStyle
+import io.github.komposeCharts.style.TooltipStyle
 import kotlin.random.Random
 
 @Composable
 fun BarChartScreen() {
     var grouping by remember { mutableStateOf(BarGrouping.GROUPED) }
     var orientation by remember { mutableStateOf(BarOrientation.VERTICAL) }
+    var legendPosition by remember { mutableStateOf(LegendPosition.BOTTOM) }
     var dataRevision by remember { mutableStateOf(0) }
+    var lastTapped by remember { mutableStateOf<String?>(null) }
 
     val quarters = listOf("Q1", "Q2", "Q3", "Q4")
 
@@ -73,10 +78,19 @@ fun BarChartScreen() {
                 grouping = grouping,
                 orientation = orientation,
                 showValueLabels = true,
+                legendStyle = LegendStyle(position = legendPosition),
+                tooltipStyle = TooltipStyle(),
             ),
             onBarClick = { sIdx, point ->
-                println("Tapped series $sIdx: ${point.label} = ${point.y}")
+                lastTapped = "${data.series[sIdx].label}: ${point.label} = ${point.y.toInt()}"
             }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = lastTapped ?: "Tap a bar to see data",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -113,7 +127,28 @@ fun BarChartScreen() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Button(onClick = { dataRevision++ }) {
+        Text("Legend Position", style = MaterialTheme.typography.labelMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = legendPosition == LegendPosition.BOTTOM,
+                onClick = { legendPosition = LegendPosition.BOTTOM },
+                label = { Text("Bottom") }
+            )
+            FilterChip(
+                selected = legendPosition == LegendPosition.TOP,
+                onClick = { legendPosition = LegendPosition.TOP },
+                label = { Text("Top") }
+            )
+            FilterChip(
+                selected = legendPosition == LegendPosition.RIGHT,
+                onClick = { legendPosition = LegendPosition.RIGHT },
+                label = { Text("Right") }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(onClick = { dataRevision++; lastTapped = null }) {
             Text("Randomize")
         }
     }

@@ -26,15 +26,19 @@ import io.github.komposeCharts.charts.PieChart
 import io.github.komposeCharts.core.data.ChartData
 import io.github.komposeCharts.core.data.DataPoint
 import io.github.komposeCharts.core.data.DataSeries
+import io.github.komposeCharts.style.LegendStyle
 import io.github.komposeCharts.style.PieChartStyle
 import io.github.komposeCharts.style.SliceLabelType
+import io.github.komposeCharts.style.TooltipStyle
 import kotlin.random.Random
 
 @Composable
 fun PieChartScreen() {
     var labelType by remember { mutableStateOf(SliceLabelType.PERCENT) }
     var innerRadius by remember { mutableStateOf(0f) }
+    var showLegend by remember { mutableStateOf(true) }
     var dataRevision by remember { mutableStateOf(0) }
+    var lastTapped by remember { mutableStateOf<String?>(null) }
 
     val categories = listOf("Design", "Engineering", "Marketing", "Sales", "Support")
 
@@ -69,10 +73,19 @@ fun PieChartScreen() {
                 sliceLabelType = labelType,
                 innerRadiusFraction = innerRadius,
                 centerLabel = centerLabel,
+                legendStyle = LegendStyle(visible = showLegend),
+                tooltipStyle = TooltipStyle(dismissAfterMs = 3000L),
             ),
             onSliceClick = { _, point ->
-                println("Tapped slice: ${point.label} = ${point.y}")
+                lastTapped = "${point.label}: ${"%.1f".format(point.y)}"
             }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = lastTapped ?: "Tap a slice to see data",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -104,8 +117,15 @@ fun PieChartScreen() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Button(onClick = { dataRevision++ }) {
-            Text("Randomize")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = showLegend,
+                onClick = { showLegend = !showLegend },
+                label = { Text("Show Legend") }
+            )
+            Button(onClick = { dataRevision++; lastTapped = null }) {
+                Text("Randomize")
+            }
         }
     }
 }

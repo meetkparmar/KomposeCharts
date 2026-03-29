@@ -32,4 +32,7 @@ data class LineChartStyle(
     val markerRadius: Dp = 4.dp,
     val axisStyle: AxisStyle = AxisStyle(),
     val animation: ChartAnimation = ChartAnimation.Default,
+    val legendStyle: LegendStyle = LegendStyle(),
+    /** Set to a [TooltipStyle] instance to enable data callout tooltips on tap. */
+    val tooltipStyle: TooltipStyle? = null,
 )

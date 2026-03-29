@@ -2,6 +2,7 @@ package io.github.komposeCharts.renderer
 
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -9,6 +10,7 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.dp
 import io.github.komposeCharts.core.data.ChartData
+import io.github.komposeCharts.core.data.DataPoint
 import io.github.komposeCharts.internal.ChartCoordinateMapper
 import io.github.komposeCharts.style.BarChartStyle
 import io.github.komposeCharts.style.BarGrouping
@@ -21,6 +23,7 @@ import io.github.komposeCharts.theme.ChartTheme
  * Animation: bar height grows via `lerp(baseline, top, fraction)` — bars grow upward.
  *
  * @param fractions Per-series animation fraction list (one per series, or a single shared value).
+ * @return List of drawn bar rects for hit testing: (seriesIndex, DataPoint, Rect).
  */
 internal fun DrawScope.drawBars(
     data: ChartData,
@@ -30,10 +33,10 @@ internal fun DrawScope.drawBars(
     fractions: List<Float>,
     theme: ChartTheme,
     textMeasurer: TextMeasurer,
-) {
+): List<Triple<Int, DataPoint, Rect>> {
     val seriesCount = data.series.size
     val categoryCount = data.series.maxOf { it.points.size }
-    if (categoryCount == 0) return
+    if (categoryCount == 0) return emptyList()
 
     val categoryWidthPx = mapper.plotWidth / categoryCount
     val groupGap = categoryWidthPx * style.groupSpacing
@@ -44,7 +47,7 @@ internal fun DrawScope.drawBars(
     } else groupWidthPx
     val cornerRadiusPx = style.barCornerRadius.toPx()
 
-    when (style.grouping) {
+    return when (style.grouping) {
         BarGrouping.GROUPED -> drawGroupedBars(
             data, colors, mapper, style, fractions,
             categoryCount, categoryWidthPx, groupGap, barWidthPx, barGap,
@@ -72,7 +75,8 @@ private fun DrawScope.drawGroupedBars(
     cornerRadiusPx: Float,
     theme: ChartTheme,
     textMeasurer: TextMeasurer,
-) {
+): List<Triple<Int, DataPoint, Rect>> {
+    val rects = mutableListOf<Triple<Int, DataPoint, Rect>>()
     val seriesCount = data.series.size
     for (catIdx in 0 until categoryCount) {
         for (sIdx in 0 until seriesCount) {
@@ -98,6 +102,7 @@ private fun DrawScope.drawGroupedBars(
                     size = Size(barWidthPx, height),
                     cornerRadius = CornerRadius(cornerRadiusPx),
                 )
+                rects.add(Triple(sIdx, point, Rect(barLeft, top, barLeft + barWidthPx, top + height)))
                 if (style.showValueLabels && fraction >= 0.9f) {
                     drawValueLabel(point.y, barLeft + barWidthPx / 2f, top - 4.dp.toPx(), theme, textMeasurer)
                 }
@@ -109,13 +114,20 @@ private fun DrawScope.drawGroupedBars(
                 val barTop = mapper.plotTop + catIdx * categoryWidthPx + groupGap / 2f + sIdx * (barWidthPx + barGap)
                 drawRoundRect(
                     color = color,
-                    topLeft = Offset(baseX, barTop),
-                    size = Size(animatedRight - baseX, barWidthPx),
+                    topLeft = Offset(minOf(baseX, animatedRight), barTop),
+                    size = Size(kotlin.math.abs(animatedRight - baseX), barWidthPx),
                     cornerRadius = CornerRadius(cornerRadiusPx),
+                )
+                rects.add(
+                    Triple(
+                        sIdx, point,
+                        Rect(minOf(baseX, animatedRight), barTop, maxOf(baseX, animatedRight), barTop + barWidthPx),
+                    )
                 )
             }
         }
     }
+    return rects
 }
 
 private fun DrawScope.drawStackedBars(
@@ -130,31 +142,61 @@ private fun DrawScope.drawStackedBars(
     cornerRadiusPx: Float,
     theme: ChartTheme,
     textMeasurer: TextMeasurer,
-) {
+): List<Triple<Int, DataPoint, Rect>> {
+    val rects = mutableListOf<Triple<Int, DataPoint, Rect>>()
     val seriesCount = data.series.size
     val barWidthPx = categoryWidthPx - groupGap
 
     for (catIdx in 0 until categoryCount) {
-        var stackY = mapper.baselineY
-        for (sIdx in 0 until seriesCount) {
-            val series = data.series[sIdx]
-            val point = series.points.getOrNull(catIdx) ?: continue
-            val color = colors.getOrElse(sIdx) { theme.colors[sIdx % theme.colors.size] }
-            val fraction = fractions.getOrElse(sIdx) { fractions.lastOrNull() ?: 1f }
+        if (style.orientation == BarOrientation.VERTICAL) {
+            var stackY = mapper.baselineY
+            for (sIdx in 0 until seriesCount) {
+                val series = data.series[sIdx]
+                val point = series.points.getOrNull(catIdx) ?: continue
+                val color = colors.getOrElse(sIdx) { theme.colors[sIdx % theme.colors.size] }
+                val fraction = fractions.getOrElse(sIdx) { fractions.lastOrNull() ?: 1f }
 
-            val barLeft = mapper.plotLeft + catIdx * categoryWidthPx + groupGap / 2f
-            val segmentHeightFull = mapper.baselineY - mapper.yToPixel(point.y)
-            val segmentHeight = segmentHeightFull * fraction
+                val barLeft = mapper.plotLeft + catIdx * categoryWidthPx + groupGap / 2f
+                val segmentHeightFull = mapper.baselineY - mapper.yToPixel(point.y)
+                val segmentHeight = segmentHeightFull * fraction
 
-            drawRoundRect(
-                color = color,
-                topLeft = Offset(barLeft, stackY - segmentHeight),
-                size = Size(barWidthPx, segmentHeight),
-                cornerRadius = CornerRadius(cornerRadiusPx),
-            )
-            stackY -= segmentHeight
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(barLeft, stackY - segmentHeight),
+                    size = Size(barWidthPx, segmentHeight),
+                    cornerRadius = CornerRadius(cornerRadiusPx),
+                )
+                rects.add(
+                    Triple(sIdx, point, Rect(barLeft, stackY - segmentHeight, barLeft + barWidthPx, stackY))
+                )
+                stackY -= segmentHeight
+            }
+        } else {
+            // Horizontal stacked bars
+            val baseX = mapper.xToPixel(0f)
+            var stackX = baseX
+            val barTop = mapper.plotTop + catIdx * categoryWidthPx + groupGap / 2f
+            for (sIdx in 0 until seriesCount) {
+                val series = data.series[sIdx]
+                val point = series.points.getOrNull(catIdx) ?: continue
+                val color = colors.getOrElse(sIdx) { theme.colors[sIdx % theme.colors.size] }
+                val fraction = fractions.getOrElse(sIdx) { fractions.lastOrNull() ?: 1f }
+
+                val segmentWidthFull = mapper.xToPixel(point.y) - baseX
+                val segmentWidth = segmentWidthFull * fraction
+
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(stackX, barTop),
+                    size = Size(segmentWidth, barWidthPx),
+                    cornerRadius = CornerRadius(cornerRadiusPx),
+                )
+                rects.add(Triple(sIdx, point, Rect(stackX, barTop, stackX + segmentWidth, barTop + barWidthPx)))
+                stackX += segmentWidth
+            }
         }
     }
+    return rects
 }
 
 private fun DrawScope.drawValueLabel(

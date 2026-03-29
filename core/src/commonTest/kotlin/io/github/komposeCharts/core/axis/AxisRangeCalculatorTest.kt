@@ -84,8 +84,45 @@ class AxisRangeCalculatorTest {
     fun nice_largeValues() {
         val (range, ticks) = AxisRangeCalculator.nice(1000f, 9500f, targetTicks = 5)
 
-        assertEquals(1000f, range.min)
+        // niceStep=5000: floor(1000/5000)*5000=0, ceil(9500/5000)*5000=10000
+        assertEquals(0f, range.min)
         assertEquals(10000f, range.max)
+        assertTrue(ticks.isNotEmpty())
+    }
+
+    @Test
+    fun fromData_allNegativeValues_producesValidRange() {
+        val data = ChartData(listOf(DataPoint(0f, -50f), DataPoint(1f, -10f)))
+        val (_, yRange) = AxisRangeCalculator.fromData(data, includeZero = true)
+
+        // includeZero=true with all-negative values: yMin = rawMin, yMax = 0
+        // Both directions are represented
+        assertTrue(yRange.max > yRange.min)
+    }
+
+    @Test
+    fun fromData_allSameValues_doesNotThrow() {
+        val data = ChartData(listOf(DataPoint(0f, 42f), DataPoint(1f, 42f)))
+        val (_, yRange) = AxisRangeCalculator.fromData(data)
+
+        // All same values: range should be expanded so max > min
+        assertTrue(yRange.max > yRange.min)
+    }
+
+    @Test
+    fun nice_targetTicksTwo_returnsFewTicks() {
+        val (range, ticks) = AxisRangeCalculator.nice(0f, 100f, targetTicks = 2)
+
+        assertTrue(range.max > range.min)
+        assertTrue(ticks.size >= 2)
+        ticks.forEach { tick -> assertTrue(tick >= range.min && tick <= range.max) }
+    }
+
+    @Test
+    fun nice_verySmallRange_doesNotThrow() {
+        val (range, ticks) = AxisRangeCalculator.nice(0f, 0.001f, targetTicks = 5)
+
+        assertTrue(range.max > range.min)
         assertTrue(ticks.isNotEmpty())
     }
 }

@@ -35,4 +35,7 @@ data class PieChartStyle(
     /** Text shown in the center hole (only visible when innerRadiusFraction > 0). */
     val centerLabel: String? = null,
     val animation: ChartAnimation = ChartAnimation.Default,
+    val legendStyle: LegendStyle = LegendStyle(),
+    /** Set to a [TooltipStyle] instance to enable data callout tooltips on tap. */
+    val tooltipStyle: TooltipStyle? = null,
 )
