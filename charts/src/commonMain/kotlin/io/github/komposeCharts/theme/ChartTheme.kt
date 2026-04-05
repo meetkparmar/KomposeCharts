@@ -17,9 +17,9 @@ data class ChartTheme(
     /** Chart canvas background (transparent by default — inherits surface). */
     val backgroundColor: Color = Color.Transparent,
     /** Color for grid lines. */
-    val gridLineColor: Color = Color(0x1A000000),
+    val gridLineColor: Color = Color(0x1AFFFFFF),
     /** Color for axis lines. */
-    val axisLineColor: Color = Color(0x33000000),
+    val axisLineColor: Color = Color(0x33FFFFFF),
     /** Text style for axis tick labels. */
     val labelTextStyle: TextStyle = TextStyle(fontSize = 11.sp),
     /** Text style for chart titles. */

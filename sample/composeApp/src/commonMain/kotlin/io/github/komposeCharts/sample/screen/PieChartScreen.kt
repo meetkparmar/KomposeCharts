@@ -9,10 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,11 +22,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import io.github.komposeCharts.charts.PieChart
 import io.github.komposeCharts.core.data.ChartData
 import io.github.komposeCharts.core.data.DataPoint
 import io.github.komposeCharts.core.data.DataSeries
+import io.github.komposeCharts.sample.design.AppDimen
 import io.github.komposeCharts.style.LegendStyle
 import io.github.komposeCharts.style.PieChartStyle
 import io.github.komposeCharts.style.SliceLabelType
@@ -56,19 +57,20 @@ fun PieChartScreen() {
     }
 
     val centerLabel = if (innerRadius > 0.1f) "Budget" else null
+    val chipShape = RoundedCornerShape(AppDimen.Spacing_4dp)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(AppDimen.Spacing_24dp)
     ) {
         Text("Pie / Donut Chart", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(AppDimen.Spacing_16dp))
 
         PieChart(
             data = data,
-            modifier = Modifier.fillMaxWidth().height(300.dp),
+            modifier = Modifier.fillMaxWidth().height(AppDimen.Spacing_300dp),
             style = PieChartStyle(
                 sliceLabelType = labelType,
                 innerRadiusFraction = innerRadius,
@@ -77,32 +79,33 @@ fun PieChartScreen() {
                 tooltipStyle = TooltipStyle(dismissAfterMs = 3000L),
             ),
             onSliceClick = { _, point ->
-                lastTapped = "${point.label}: ${"%.1f".format(point.y)}"
+                lastTapped = "${point.label}: ${(kotlin.math.round(point.y * 10.0) / 10.0)}"
             }
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(AppDimen.Spacing_8dp))
         Text(
             text = lastTapped ?: "Tap a slice to see data",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(AppDimen.Spacing_16dp))
 
         Text("Slice Labels", style = MaterialTheme.typography.labelMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(AppDimen.Spacing_8dp)) {
             listOf(SliceLabelType.PERCENT, SliceLabelType.VALUE, SliceLabelType.LABEL, SliceLabelType.NONE)
                 .forEach { type ->
                     FilterChip(
                         selected = labelType == type,
                         onClick = { labelType = type },
-                        label = { Text(type.name.lowercase().replaceFirstChar { it.uppercase() }) }
+                        label = { Text(type.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                        shape = chipShape,
                     )
                 }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(AppDimen.Spacing_8dp))
 
         Text(
             "Inner radius (donut): ${(innerRadius * 100).toInt()}%",
@@ -115,17 +118,23 @@ fun PieChartScreen() {
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(AppDimen.Spacing_8dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = showLegend,
-                onClick = { showLegend = !showLegend },
-                label = { Text("Show Legend") }
-            )
-            Button(onClick = { dataRevision++; lastTapped = null }) {
-                Text("Randomize")
-            }
+        FilterChip(
+            selected = showLegend,
+            onClick = { showLegend = !showLegend },
+            label = { Text("Show Legend") },
+            shape = chipShape,
+        )
+
+        Spacer(modifier = Modifier.height(AppDimen.Spacing_8dp))
+
+        OutlinedButton(
+            onClick = { dataRevision++; lastTapped = null },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(AppDimen.Spacing_24dp),
+        ) {
+            Text("Randomize Data")
         }
     }
 }

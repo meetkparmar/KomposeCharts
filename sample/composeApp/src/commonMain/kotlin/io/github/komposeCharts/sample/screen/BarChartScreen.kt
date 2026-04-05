@@ -9,10 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,11 +21,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import io.github.komposeCharts.charts.BarChart
 import io.github.komposeCharts.core.data.ChartData
 import io.github.komposeCharts.core.data.DataPoint
 import io.github.komposeCharts.core.data.DataSeries
+import io.github.komposeCharts.sample.design.AppDimen
 import io.github.komposeCharts.style.BarChartStyle
 import io.github.komposeCharts.style.BarGrouping
 import io.github.komposeCharts.style.BarOrientation
@@ -62,18 +63,20 @@ fun BarChartScreen() {
         )
     }
 
+    val chipShape = RoundedCornerShape(AppDimen.Spacing_4dp)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(AppDimen.Spacing_24dp)
     ) {
         Text("Bar Chart", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(AppDimen.Spacing_16dp))
 
         BarChart(
             data = data,
-            modifier = Modifier.fillMaxWidth().height(260.dp),
+            modifier = Modifier.fillMaxWidth().height(AppDimen.Spacing_260dp),
             style = BarChartStyle(
                 grouping = grouping,
                 orientation = orientation,
@@ -86,70 +89,81 @@ fun BarChartScreen() {
             }
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(AppDimen.Spacing_8dp))
         Text(
             text = lastTapped ?: "Tap a bar to see data",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(AppDimen.Spacing_16dp))
 
         Text("Grouping", style = MaterialTheme.typography.labelMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(AppDimen.Spacing_8dp)) {
             FilterChip(
                 selected = grouping == BarGrouping.GROUPED,
                 onClick = { grouping = BarGrouping.GROUPED },
-                label = { Text("Grouped") }
+                label = { Text("Grouped") },
+                shape = chipShape,
             )
             FilterChip(
                 selected = grouping == BarGrouping.STACKED,
                 onClick = { grouping = BarGrouping.STACKED },
-                label = { Text("Stacked") }
+                label = { Text("Stacked") },
+                shape = chipShape,
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(AppDimen.Spacing_8dp))
 
         Text("Orientation", style = MaterialTheme.typography.labelMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(AppDimen.Spacing_8dp)) {
             FilterChip(
                 selected = orientation == BarOrientation.VERTICAL,
                 onClick = { orientation = BarOrientation.VERTICAL },
-                label = { Text("Vertical") }
+                label = { Text("Vertical") },
+                shape = chipShape,
             )
             FilterChip(
                 selected = orientation == BarOrientation.HORIZONTAL,
                 onClick = { orientation = BarOrientation.HORIZONTAL },
-                label = { Text("Horizontal") }
+                label = { Text("Horizontal") },
+                shape = chipShape,
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(AppDimen.Spacing_8dp))
 
         Text("Legend Position", style = MaterialTheme.typography.labelMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(AppDimen.Spacing_8dp)) {
             FilterChip(
                 selected = legendPosition == LegendPosition.BOTTOM,
                 onClick = { legendPosition = LegendPosition.BOTTOM },
-                label = { Text("Bottom") }
+                label = { Text("Bottom") },
+                shape = chipShape,
             )
             FilterChip(
                 selected = legendPosition == LegendPosition.TOP,
                 onClick = { legendPosition = LegendPosition.TOP },
-                label = { Text("Top") }
+                label = { Text("Top") },
+                shape = chipShape,
             )
             FilterChip(
                 selected = legendPosition == LegendPosition.RIGHT,
                 onClick = { legendPosition = LegendPosition.RIGHT },
-                label = { Text("Right") }
+                label = { Text("Right") },
+                shape = chipShape,
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(AppDimen.Spacing_8dp))
 
-        Button(onClick = { dataRevision++; lastTapped = null }) {
-            Text("Randomize")
+        OutlinedButton(
+            onClick = { dataRevision++; lastTapped = null },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(AppDimen.Spacing_24dp),
+        ) {
+            Text("Randomize Data")
         }
     }
 }

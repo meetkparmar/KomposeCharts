@@ -4,12 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.layout.layout
 import io.github.komposeCharts.interaction.TooltipState
 import io.github.komposeCharts.style.TooltipStyle
@@ -48,6 +47,9 @@ internal fun ChartTooltip(
         (kotlin.math.round(point.y * 10f) / 10f).toString()
     }
 
+    val surfaceColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+
     Column(
         modifier = Modifier
             .layout { measurable, constraints ->
@@ -60,7 +62,7 @@ internal fun ChartTooltip(
                 }
             }
             .background(
-                color = Color.Black.copy(alpha = style.backgroundAlpha),
+                color = surfaceColor.copy(alpha = style.backgroundAlpha),
                 shape = RoundedCornerShape(style.cornerRadius),
             )
             .padding(style.padding),
@@ -68,12 +70,12 @@ internal fun ChartTooltip(
         if (state.seriesLabel.isNotBlank()) {
             Text(
                 text = state.seriesLabel,
-                style = style.textStyle.copy(color = Color.White.copy(alpha = 0.7f)),
+                style = style.textStyle.copy(color = onSurfaceColor.copy(alpha = 0.7f)),
             )
         }
         Text(
             text = "$labelText: $valueText",
-            style = style.textStyle.copy(color = Color.White),
+            style = style.valueTextStyle.copy(color = onSurfaceColor),
         )
     }
 }

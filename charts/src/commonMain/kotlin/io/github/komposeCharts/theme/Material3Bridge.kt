@@ -20,17 +20,17 @@ fun chartThemeFromMaterial3(): ChartTheme {
     val scheme = MaterialTheme.colorScheme
     val colors = listOf(
         scheme.primary,
-        scheme.secondary,
         scheme.tertiary,
+        scheme.secondary,
         scheme.primaryContainer,
-        scheme.secondaryContainer,
         scheme.tertiaryContainer,
+        scheme.secondaryContainer,
         scheme.error,
         scheme.outline,
     )
-    return ChartDefaults.theme().copy(
+    return ChartDefaults.darkTheme().copy(
         colors = colors,
-        gridLineColor = scheme.outlineVariant.copy(alpha = 0.4f),
-        axisLineColor = scheme.outline.copy(alpha = 0.6f),
+        gridLineColor = scheme.outlineVariant.copy(alpha = 0.15f),
+        axisLineColor = scheme.outlineVariant.copy(alpha = 0.4f),
     )
 }

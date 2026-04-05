@@ -20,9 +20,14 @@ import androidx.compose.ui.unit.sp
  * @param dismissAfterMs Auto-dismiss delay in milliseconds. Use 0 to never auto-dismiss.
  */
 data class TooltipStyle(
-    val backgroundAlpha: Float = 0.9f,
-    val cornerRadius: Dp = 8.dp,
+    /** Opacity of the tooltip background surface (0f–1f). Default: 0.8 (glassmorphism). */
+    val backgroundAlpha: Float = 0.8f,
+    /** Corner rounding radius. Default: 16dp per Analytical Gallery design system. */
+    val cornerRadius: Dp = 16.dp,
     val padding: Dp = 8.dp,
+    /** Text style for the series header label. */
     val textStyle: TextStyle = TextStyle(fontSize = 12.sp),
+    /** Text style for the data value line — slightly larger to make the number the hero. */
+    val valueTextStyle: TextStyle = TextStyle(fontSize = 14.sp),
     val dismissAfterMs: Long = 2000L,
 )

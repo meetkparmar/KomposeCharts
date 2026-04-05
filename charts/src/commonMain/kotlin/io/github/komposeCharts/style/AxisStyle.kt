@@ -21,4 +21,9 @@ data class AxisStyle(
     val xLabelFormatter: ((Float) -> String)? = null,
     val axisLineThicknessDp: Dp = 1.dp,
     val gridLineThicknessDp: Dp = 0.5.dp,
+    /**
+     * Render axis labels in ALL CAPS for a precise "blueprint" aesthetic
+     * per the Analytical Gallery design system.
+     */
+    val labelAllCaps: Boolean = true,
 )

@@ -48,7 +48,8 @@ internal fun DrawScope.drawAxes(
         val formatter = style.yLabelFormatter ?: ::formatAxisLabel
         for (tick in yTicks) {
             val y = mapper.yToPixel(tick)
-            val label = formatter(tick)
+            val rawLabel = formatter(tick)
+            val label = if (style.labelAllCaps) rawLabel.uppercase() else rawLabel
             val measured = textMeasurer.measure(label, style = theme.labelTextStyle)
             val textX = (mapper.plotLeft - measured.size.width - 4.dp.toPx()).coerceAtLeast(0f)
             val textY = y - measured.size.height / 2f
@@ -60,7 +61,8 @@ internal fun DrawScope.drawAxes(
         val points = xSeries[0].points
         val formatter = style.xLabelFormatter
         for (point in points) {
-            val label = formatter?.invoke(point.x) ?: point.label ?: continue
+            val rawLabel = formatter?.invoke(point.x) ?: point.label ?: continue
+            val label = if (style.labelAllCaps) rawLabel.uppercase() else rawLabel
             val x = mapper.xToPixel(point.x)
             val measured = textMeasurer.measure(label, style = theme.labelTextStyle)
             val textX = x - measured.size.width / 2f
