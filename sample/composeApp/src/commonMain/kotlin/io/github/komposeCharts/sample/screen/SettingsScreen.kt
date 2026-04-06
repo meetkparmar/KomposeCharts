@@ -1,13 +1,11 @@
 package io.github.komposeCharts.sample.screen
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -20,10 +18,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -35,7 +29,6 @@ fun SettingsScreen(
     darkTheme: Boolean,
     onDarkThemeChange: (Boolean) -> Unit,
 ) {
-    var highContrast by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -83,12 +76,6 @@ fun SettingsScreen(
                             description = "Adjust the appearance of the workspace.",
                             checked = darkTheme,
                             onCheckedChange = onDarkThemeChange,
-                        )
-                        SettingsToggleRow(
-                            title = "High Contrast",
-                            description = "Increase legibility for chart elements.",
-                            checked = highContrast,
-                            onCheckedChange = { highContrast = it },
                         )
                     }
                 }
@@ -139,32 +126,6 @@ fun SettingsScreen(
                             thickness = AppDimen.Spacing_1dp,
                         )
 
-                        // Licenses row
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = AppDimen.Spacing_20dp, vertical = AppDimen.Spacing_20dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = "Licenses",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                            Text(
-                                text = "›",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                            thickness = AppDimen.Spacing_1dp,
-                        )
-
                         // Clear Cache row
                         Row(
                             modifier = Modifier
@@ -182,36 +143,6 @@ fun SettingsScreen(
                     }
                 }
 
-                // System Integrity card
-                Surface(
-                    shape = RoundedCornerShape(AppDimen.Spacing_32dp),
-                    color = MaterialTheme.colorScheme.surfaceContainer,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(AppDimen.Spacing_128dp),
-                ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.BottomStart)
-                                .padding(AppDimen.Spacing_16dp),
-                            verticalArrangement = Arrangement.spacedBy(AppDimen.Spacing_2dp),
-                        ) {
-                            Text(
-                                text = "SYSTEM INTEGRITY",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                letterSpacing = AppTypography.statusLabelLetterSpacing,
-                            )
-                            Text(
-                                text = "All systems operational",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                    }
-                }
             }
         }
     }

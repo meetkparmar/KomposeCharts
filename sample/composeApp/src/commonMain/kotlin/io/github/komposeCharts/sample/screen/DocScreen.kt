@@ -2,6 +2,7 @@ package io.github.komposeCharts.sample.screen
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -55,11 +57,28 @@ import io.github.komposeCharts.style.PieChartStyle
 import io.github.komposeCharts.style.SliceLabelType
 
 // ── Syntax highlight colors ────────────────────────────────────────────────────
-private val SyntaxDefault  = Color(0xFFE1E6E9)
-private val SyntaxKeyword  = Color(0xFFCEDDFF)
-private val SyntaxType     = Color(0xFF7FC2DB)
-private val SyntaxString   = Color(0xFF8DD0E9)
-private val SyntaxMuted    = Color(0xFF707679)
+private data class SyntaxColors(
+    val default: Color,
+    val keyword: Color,
+    val type: Color,
+    val string: Color,
+)
+
+@Composable
+private fun syntaxColors(): SyntaxColors = if (isSystemInDarkTheme()) SyntaxColors(
+    default = Color(0xFFE1E6E9),
+    keyword = Color(0xFFCEDDFF),
+    type    = Color(0xFF7FC2DB),
+    string  = Color(0xFF8DD0E9),
+) else SyntaxColors(
+    default = Color(0xFF1D2B2F),
+    keyword = Color(0xFF0055AA),
+    type    = Color(0xFF006B8A),
+    string  = Color(0xFF005C45),
+)
+
+private val CodeBgDark  = Color(0xFF161A1C)
+private val CodeBgLight = Color(0xFFF0F4F8)
 
 // ── Static preview data ────────────────────────────────────────────────────────
 private val linePreviewData = ChartData(series = listOf(
@@ -110,7 +129,8 @@ fun DocScreen() {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = AppDimen.Spacing_24dp)
                 .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(top = AppDimen.Spacing_48dp, bottom = AppDimen.Spacing_128dp),
+                .navigationBarsPadding()
+                .padding(top = AppDimen.Spacing_48dp, bottom = AppDimen.Spacing_32dp),
             verticalArrangement = Arrangement.spacedBy(AppDimen.Spacing_48dp),
         ) {
             HeroSection()
@@ -159,7 +179,7 @@ private fun HeroSection() {
 
         // Gradient headline
         Text(
-            text = "The Analytical\nGallery",
+            text = "KomposeCharts",
             style = MaterialTheme.typography.displayMedium.copy(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
@@ -175,7 +195,7 @@ private fun HeroSection() {
 
         // Subtitle
         Text(
-            text = "A premium, Compose-first charting library designed for precision, performance, and editorial aesthetics.",
+            text = "A Kotlin Multiplatform + Compose Multiplatform chart library — beautiful, animated, and fully customizable charts across Android, iOS, Desktop, and Web.",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             lineHeight = AppTypography.subtitleLineHeight,
@@ -239,19 +259,19 @@ private fun ComponentTitle(name: String, apiHint: String) {
 @Composable
 private fun CodeBlock(filename: String, code: AnnotatedString) {
     val clipboard = LocalClipboardManager.current
+    val codeBg = if (isSystemInDarkTheme()) CodeBgDark else CodeBgLight
     Surface(
         shape = RoundedCornerShape(AppDimen.Spacing_32dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         border = BorderStroke(
             AppDimen.Spacing_1dp,
-            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+            MaterialTheme.colorScheme.outlineVariant,
         ),
     ) {
         Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
                     .padding(horizontal = AppDimen.Spacing_16dp, vertical = AppDimen.Spacing_8dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
@@ -259,7 +279,7 @@ private fun CodeBlock(filename: String, code: AnnotatedString) {
                 Text(
                     text = filename,
                     style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
-                    color = MaterialTheme.colorScheme.outline,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 TextButton(
                     onClick = { clipboard.setText(AnnotatedString(code.text)) },
@@ -276,17 +296,23 @@ private fun CodeBlock(filename: String, code: AnnotatedString) {
                 }
             }
             HorizontalDivider(
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                color = MaterialTheme.colorScheme.outlineVariant,
                 thickness = AppDimen.Spacing_1dp,
             )
-            Text(
-                text = code,
-                modifier = Modifier.padding(AppDimen.Spacing_24dp),
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontFamily = FontFamily.Monospace,
-                    lineHeight = 22.sp,
-                ),
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(codeBg)
+                    .padding(AppDimen.Spacing_24dp),
+            ) {
+                Text(
+                    text = code,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontFamily = FontFamily.Monospace,
+                        lineHeight = 22.sp,
+                    ),
+                )
+            }
         }
     }
 }
@@ -295,13 +321,13 @@ private fun CodeBlock(filename: String, code: AnnotatedString) {
 private fun ChartPreviewCard(content: @Composable () -> Unit) {
     Surface(
         shape = RoundedCornerShape(AppDimen.Spacing_32dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         border = BorderStroke(
             AppDimen.Spacing_1dp,
-            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+            MaterialTheme.colorScheme.outlineVariant,
         ),
     ) {
-        Box(modifier = Modifier.padding(AppDimen.Spacing_8dp)) {
+        Box(modifier = Modifier.padding(AppDimen.Spacing_16dp)) {
             content()
         }
     }
@@ -311,6 +337,7 @@ private fun ChartPreviewCard(content: @Composable () -> Unit) {
 
 @Composable
 private fun InstallationSection() {
+    val c = syntaxColors()
     Column(verticalArrangement = Arrangement.spacedBy(AppDimen.Spacing_16dp)) {
         SectionHeading(number = "1", title = "Installation")
         Text(
@@ -319,13 +346,13 @@ private fun InstallationSection() {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         val code = buildAnnotatedString {
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("dependencies {\n    ") }
-            withStyle(SpanStyle(color = SyntaxKeyword)) { append("implementation") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("(\n        ") }
-            withStyle(SpanStyle(color = SyntaxString)) {
+            withStyle(SpanStyle(color = c.default)) { append("dependencies {\n    ") }
+            withStyle(SpanStyle(color = c.keyword)) { append("implementation") }
+            withStyle(SpanStyle(color = c.default)) { append("(\n        ") }
+            withStyle(SpanStyle(color = c.string)) {
                 append("\"io.github.komposeCharts:charts:1.0.0\"")
             }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("\n    )\n}") }
+            withStyle(SpanStyle(color = c.default)) { append("\n    )\n}") }
         }
         CodeBlock(filename = "build.gradle.kts", code = code)
     }
@@ -356,6 +383,7 @@ private fun CoreComponentsSection() {
 
 @Composable
 private fun LineChartSection() {
+    val c = syntaxColors()
     Column(verticalArrangement = Arrangement.spacedBy(AppDimen.Spacing_16dp)) {
         ComponentTitle(name = "Line Charts", apiHint = "LineChart()")
         ChartPreviewCard {
@@ -370,20 +398,20 @@ private fun LineChartSection() {
             )
         }
         val code = buildAnnotatedString {
-            withStyle(SpanStyle(color = SyntaxKeyword)) { append("LineChart") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("(\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("    data = chartData,\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("    style = ") }
-            withStyle(SpanStyle(color = SyntaxType)) { append("LineChartStyle") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("(\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("        curveType = ") }
-            withStyle(SpanStyle(color = SyntaxType)) { append("CurveType") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append(".CATMULL_ROM,\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("        showArea = ") }
-            withStyle(SpanStyle(color = SyntaxType)) { append("true") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append(",\n        tooltipStyle = ") }
-            withStyle(SpanStyle(color = SyntaxType)) { append("TooltipStyle") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("(),\n    ),\n)") }
+            withStyle(SpanStyle(color = c.keyword)) { append("LineChart") }
+            withStyle(SpanStyle(color = c.default)) { append("(\n") }
+            withStyle(SpanStyle(color = c.default)) { append("    data = chartData,\n") }
+            withStyle(SpanStyle(color = c.default)) { append("    style = ") }
+            withStyle(SpanStyle(color = c.type))    { append("LineChartStyle") }
+            withStyle(SpanStyle(color = c.default)) { append("(\n") }
+            withStyle(SpanStyle(color = c.default)) { append("        curveType = ") }
+            withStyle(SpanStyle(color = c.type))    { append("CurveType") }
+            withStyle(SpanStyle(color = c.default)) { append(".CATMULL_ROM,\n") }
+            withStyle(SpanStyle(color = c.default)) { append("        showArea = ") }
+            withStyle(SpanStyle(color = c.type))    { append("true") }
+            withStyle(SpanStyle(color = c.default)) { append(",\n        tooltipStyle = ") }
+            withStyle(SpanStyle(color = c.type))    { append("TooltipStyle") }
+            withStyle(SpanStyle(color = c.default)) { append("(),\n    ),\n)") }
         }
         CodeBlock(filename = "LineChart.kt", code = code)
     }
@@ -391,6 +419,7 @@ private fun LineChartSection() {
 
 @Composable
 private fun BarChartSection() {
+    val c = syntaxColors()
     Column(verticalArrangement = Arrangement.spacedBy(AppDimen.Spacing_16dp)) {
         ComponentTitle(name = "Bar Charts", apiHint = "BarChart()")
         ChartPreviewCard {
@@ -404,20 +433,20 @@ private fun BarChartSection() {
             )
         }
         val code = buildAnnotatedString {
-            withStyle(SpanStyle(color = SyntaxKeyword)) { append("BarChart") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("(\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("    data = chartData,\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("    style = ") }
-            withStyle(SpanStyle(color = SyntaxType)) { append("BarChartStyle") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("(\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("        grouping = ") }
-            withStyle(SpanStyle(color = SyntaxType)) { append("BarGrouping") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append(".GROUPED,\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("        showValueLabels = ") }
-            withStyle(SpanStyle(color = SyntaxType)) { append("true") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append(",\n        tooltipStyle = ") }
-            withStyle(SpanStyle(color = SyntaxType)) { append("TooltipStyle") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("(),\n    ),\n)") }
+            withStyle(SpanStyle(color = c.keyword)) { append("BarChart") }
+            withStyle(SpanStyle(color = c.default)) { append("(\n") }
+            withStyle(SpanStyle(color = c.default)) { append("    data = chartData,\n") }
+            withStyle(SpanStyle(color = c.default)) { append("    style = ") }
+            withStyle(SpanStyle(color = c.type))    { append("BarChartStyle") }
+            withStyle(SpanStyle(color = c.default)) { append("(\n") }
+            withStyle(SpanStyle(color = c.default)) { append("        grouping = ") }
+            withStyle(SpanStyle(color = c.type))    { append("BarGrouping") }
+            withStyle(SpanStyle(color = c.default)) { append(".GROUPED,\n") }
+            withStyle(SpanStyle(color = c.default)) { append("        showValueLabels = ") }
+            withStyle(SpanStyle(color = c.type))    { append("true") }
+            withStyle(SpanStyle(color = c.default)) { append(",\n        tooltipStyle = ") }
+            withStyle(SpanStyle(color = c.type))    { append("TooltipStyle") }
+            withStyle(SpanStyle(color = c.default)) { append("(),\n    ),\n)") }
         }
         CodeBlock(filename = "BarChart.kt", code = code)
     }
@@ -425,6 +454,7 @@ private fun BarChartSection() {
 
 @Composable
 private fun PieChartSection() {
+    val c = syntaxColors()
     Column(verticalArrangement = Arrangement.spacedBy(AppDimen.Spacing_16dp)) {
         ComponentTitle(name = "Pie & Donut", apiHint = "PieChart()")
         ChartPreviewCard {
@@ -439,21 +469,21 @@ private fun PieChartSection() {
             )
         }
         val code = buildAnnotatedString {
-            withStyle(SpanStyle(color = SyntaxKeyword)) { append("PieChart") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("(\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("    data = chartData,\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("    style = ") }
-            withStyle(SpanStyle(color = SyntaxType)) { append("PieChartStyle") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("(\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("        innerRadiusFraction = ") }
-            withStyle(SpanStyle(color = SyntaxType)) { append("0.5f") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append(",\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("        centerLabel = ") }
-            withStyle(SpanStyle(color = SyntaxString)) { append("\"Total\"") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append(",\n") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append("        sliceLabelType = ") }
-            withStyle(SpanStyle(color = SyntaxType)) { append("SliceLabelType") }
-            withStyle(SpanStyle(color = SyntaxDefault)) { append(".PERCENT,\n    ),\n)") }
+            withStyle(SpanStyle(color = c.keyword)) { append("PieChart") }
+            withStyle(SpanStyle(color = c.default)) { append("(\n") }
+            withStyle(SpanStyle(color = c.default)) { append("    data = chartData,\n") }
+            withStyle(SpanStyle(color = c.default)) { append("    style = ") }
+            withStyle(SpanStyle(color = c.type))    { append("PieChartStyle") }
+            withStyle(SpanStyle(color = c.default)) { append("(\n") }
+            withStyle(SpanStyle(color = c.default)) { append("        innerRadiusFraction = ") }
+            withStyle(SpanStyle(color = c.type))    { append("0.5f") }
+            withStyle(SpanStyle(color = c.default)) { append(",\n") }
+            withStyle(SpanStyle(color = c.default)) { append("        centerLabel = ") }
+            withStyle(SpanStyle(color = c.string))  { append("\"Total\"") }
+            withStyle(SpanStyle(color = c.default)) { append(",\n") }
+            withStyle(SpanStyle(color = c.default)) { append("        sliceLabelType = ") }
+            withStyle(SpanStyle(color = c.type))    { append("SliceLabelType") }
+            withStyle(SpanStyle(color = c.default)) { append(".PERCENT,\n    ),\n)") }
         }
         CodeBlock(filename = "PieChart.kt", code = code)
     }
