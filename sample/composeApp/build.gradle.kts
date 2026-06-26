@@ -73,6 +73,12 @@ kotlin {
     }
 }
 
+compose.desktop {
+    application {
+        mainClass = "io.github.komposeCharts.sample.MainKt"
+    }
+}
+
 android {
     namespace = "io.github.komposeCharts.sample"
     compileSdk = 35

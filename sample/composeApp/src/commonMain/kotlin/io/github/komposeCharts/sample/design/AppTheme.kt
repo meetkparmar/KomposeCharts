@@ -18,7 +18,5 @@ fun AppTheme(
     content: @Composable () -> Unit,
 ) {
     val colorScheme = if (darkTheme) AnalyticalGalleryDarkColorScheme else AnalyticalGalleryLightColorScheme
-    MaterialTheme(colorScheme = colorScheme) {
-
-    }
+    MaterialTheme(colorScheme = colorScheme, content = content)
 }
