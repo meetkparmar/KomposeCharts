@@ -2,7 +2,8 @@ package io.github.komposeCharts.sample.design
 
 import androidx.compose.ui.unit.dp
 
-internal object AppDimen {
+object AppDimen {
+    // Spacing
     val Spacing_0dp = 0.dp
     val Spacing_1dp = 1.dp
     val Spacing_2dp = 2.dp
@@ -19,14 +20,11 @@ internal object AppDimen {
     val Spacing_24dp = 24.dp
     val Spacing_30dp = 30.dp
     val Spacing_32dp = 32.dp
-    val Spacing_33dp = 33.dp
     val Spacing_40dp = 40.dp
-    val Spacing_41dp = 41.dp
     val Spacing_48dp = 48.dp
     val Spacing_56dp = 56.dp
     val Spacing_60dp = 60.dp
     val Spacing_80dp = 80.dp
-    val Spacing_96dp = 96.dp
     val Spacing_100dp = 100.dp
     val Spacing_128dp = 128.dp
     val Spacing_180dp = 180.dp
@@ -34,4 +32,12 @@ internal object AppDimen {
     val Spacing_256dp = 256.dp
     val Spacing_260dp = 260.dp
     val Spacing_300dp = 300.dp
+
+    // Corner radii
+    val CornerSmall = 5.dp
+    val CornerSmallMedium = 8.dp
+    val CornerMedium = 12.dp
+    val CornerLarge = 16.dp
+    val CornerPill = 999.dp
+    val BorderWidth = 1.dp
 }

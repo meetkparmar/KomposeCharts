@@ -3,8 +3,6 @@ package io.github.komposeCharts.sample.design
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import io.github.komposeCharts.theme.ChartTheme
-import io.github.komposeCharts.theme.chartThemeFromMaterial3
 
 /**
  * Root theme composable for the KomposeCharts sample app.
@@ -21,8 +19,6 @@ fun AppTheme(
 ) {
     val colorScheme = if (darkTheme) AnalyticalGalleryDarkColorScheme else AnalyticalGalleryLightColorScheme
     MaterialTheme(colorScheme = colorScheme) {
-        ChartTheme(theme = chartThemeFromMaterial3()) {
-            content()
-        }
+
     }
 }

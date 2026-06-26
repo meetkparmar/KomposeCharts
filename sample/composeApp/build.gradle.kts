@@ -52,6 +52,7 @@ kotlin {
 
         androidMain.dependencies {
             implementation(compose.preview)
+            implementation(compose.uiTooling)
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
@@ -61,11 +62,13 @@ kotlin {
             implementation(compose.materialIconsExtended)
             implementation(compose.ui)
             implementation(compose.components.resources)
+            implementation(compose.components.uiToolingPreview)
             implementation(project(":charts"))
             implementation(project(":core"))
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
+            implementation(compose.uiTooling)
         }
     }
 }
