@@ -10,23 +10,27 @@ local.properties
 
 # IDE
 .idea/
+.vscode/
 *.iml
 .DS_Store
 
 # iOS / Xcode
-sample/iosApp/iosApp.xcodeproj/xcuserdata/
-sample/iosApp/iosApp.xcworkspace/xcuserdata/
-*.xcworkspace
-!*.xcodeproj/*.xcworkspace
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
 
 # Kotlin/Native
 *.klib
 *.knm
+.kotlin/
+
+# Kotlin/JS
+kotlin-js-store/
 
 # Compose generated resources
 */composeResources/
 
-.claude
-Docs
-kotlin-js-store
-.kotlin
+# Claude
+.claude/
+
+# Docs
+Docs/
