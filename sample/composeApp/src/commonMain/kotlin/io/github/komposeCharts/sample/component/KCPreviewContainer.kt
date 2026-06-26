@@ -11,6 +11,7 @@ import io.github.komposeCharts.sample.design.AppColors
 
 @Composable
 fun KCPreviewContainer(content: @Composable () -> Unit) {
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
