@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import io.github.komposeCharts.sample.App
 
 class MainActivity : ComponentActivity() {
@@ -11,7 +13,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            App()
+            val rootView = window.decorView
+            val insets = ViewCompat.getRootWindowInsets(rootView)
+            val statusBarHeight = insets
+                ?.getInsets(WindowInsetsCompat.Type.statusBars())
+                ?.top ?: 0
+            val density = resources.displayMetrics.density
+            val statusBarDp = (statusBarHeight / density).toInt()
+
+            App(statusBarDp = statusBarDp)
         }
     }
 }

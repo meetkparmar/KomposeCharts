@@ -1,10 +1,14 @@
 package io.github.komposeCharts.sample.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -30,12 +34,14 @@ fun KCTopBar(
     trailing: String = "",
     showBack: Boolean = true,
     onBack: () -> Unit = {},
+    statusBarHeight: Int = 0,
 ) {
     val borderColor = AppColors.BorderSubtle
 
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
+            .background(AppColors.Surface)
             .drawBehind {
                 drawLine(
                     color = borderColor,
@@ -43,44 +49,53 @@ fun KCTopBar(
                     end = Offset(size.width, size.height),
                     strokeWidth = 1.dp.toPx(),
                 )
-            }
-            .padding(horizontal = 8.dp, vertical = 9.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            },
     ) {
-        if (showBack) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onBack),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "\u2190", // ←
-                    fontSize = 23.sp,
-                    color = AppColors.TextPrimary,
-                )
-            }
+        if (statusBarHeight > 0) {
+            Spacer(Modifier.height(statusBarHeight.dp))
         }
 
-        Text(
-            text = title,
-            modifier = Modifier.weight(1f),
-            color = AppColors.TextPrimary,
-            fontSize = AppTypography.Title,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 9.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (showBack) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onBack),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "\u2190", // ←
+                        fontSize = 23.sp,
+                        color = AppColors.TextPrimary,
+                    )
+                }
+            }
 
-        if (trailing.isNotEmpty()) {
             Text(
-                text = trailing,
-                modifier = Modifier.padding(end = 12.dp),
-                color = AppColors.TextFaint,
-                fontSize = AppTypography.Mono,
-                fontFamily = FontFamily.Monospace,
+                text = title,
+                modifier = Modifier.weight(1f),
+                color = AppColors.TextPrimary,
+                fontSize = AppTypography.Title,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
             )
+
+            if (trailing.isNotEmpty()) {
+                Text(
+                    text = trailing,
+                    modifier = Modifier.padding(end = 12.dp),
+                    color = AppColors.TextFaint,
+                    fontSize = AppTypography.Mono,
+                    fontFamily = FontFamily.Monospace,
+                )
+            }
         }
     }
 }
