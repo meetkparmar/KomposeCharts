@@ -13,6 +13,8 @@ import io.github.komposeCharts.sample.design.AppColors
 import io.github.komposeCharts.sample.design.AppTheme
 import io.github.komposeCharts.sample.screen.BarChartScreen
 import io.github.komposeCharts.sample.screen.HomeScreen
+import io.github.komposeCharts.sample.screen.LineChartScreen
+import io.github.komposeCharts.sample.screen.PieChartScreen
 
 @Composable
 fun App(statusBarDp: Int = 0) {
@@ -29,6 +31,16 @@ fun App(statusBarDp: Int = 0) {
                 )
 
                 "bar" -> BarChartScreen(
+                    statusBarDp = statusBarDp,
+                    onBack = { screen = "home" },
+                )
+
+                "line" -> LineChartScreen(
+                    statusBarDp = statusBarDp,
+                    onBack = { screen = "home" },
+                )
+
+                "pie" -> PieChartScreen(
                     statusBarDp = statusBarDp,
                     onBack = { screen = "home" },
                 )

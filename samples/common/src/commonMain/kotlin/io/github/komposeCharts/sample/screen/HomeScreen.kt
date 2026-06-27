@@ -131,6 +131,20 @@ fun HomeScreen(
                 onClick = { onChartSelected("bar") },
             )
 
+            KCListRow(
+                title = "Line Chart",
+                subtitle = "Track trends over a continuous axis.",
+                tag = "LineChart",
+                onClick = { onChartSelected("line") },
+            )
+
+            KCListRow(
+                title = "Pie Chart",
+                subtitle = "Show parts of a whole.",
+                tag = "PieChart",
+                onClick = { onChartSelected("pie") },
+            )
+
             // ── Footer ──
             Text(
                 text = "Kotlin Multiplatform \u00B7 Compose UI",
