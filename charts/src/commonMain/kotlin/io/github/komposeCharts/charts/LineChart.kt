@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -89,6 +90,12 @@ fun LineChart(
 
     // Tooltip state.
     var tooltipText by remember { mutableStateOf<String?>(null) }
+
+    // Clear transient selection/tooltip when the underlying data changes.
+    LaunchedEffect(dataKey) {
+        selectedPoint = null
+        tooltipText = null
+    }
 
     // Filter data by hidden series.
     val visibleData = remember(data, hiddenSeries) {

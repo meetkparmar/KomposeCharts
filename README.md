@@ -1,6 +1,6 @@
 # KomposeCharts
 
-A Kotlin Multiplatform + Compose Multiplatform chart library — beautiful, animated, and fully customizable charts across Android, iOS, Desktop, and Web.
+A Kotlin Multiplatform + Compose Multiplatform chart library — beautiful, animated, and fully customizable charts across Android, iOS, and Desktop.
 
 ## Platforms
 
@@ -8,8 +8,7 @@ A Kotlin Multiplatform + Compose Multiplatform chart library — beautiful, anim
 |---|---|
 | Android (minSdk 24) | Supported |
 | iOS (16+) | Supported |
-| Desktop / JVM | Supported |
-| Web / Wasm | Supported |
+| Desktop / JVM (Mac/Windows) | Supported |
 
 ## Modules
 

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -94,6 +95,13 @@ fun BarChart(
 
     // Tooltip state
     var tooltipText by remember { mutableStateOf<String?>(null) }
+
+    // Clear transient selection/tooltip when the underlying data changes so a
+    // stale selection from old data can't linger onto new data.
+    LaunchedEffect(dataKey) {
+        selectedBar = null
+        tooltipText = null
+    }
 
     // Filter data by hidden series
     val visibleData = remember(data, hiddenSeries) {
@@ -244,13 +252,22 @@ fun BarChart(
                         },
                 ) {
                     val paddingPx = 40f
-                    val mapper = ChartCoordinateMapper(size, xRange, niceYRange, paddingPx)
+                    val swapAxes = style.orientation == BarOrientation.HORIZONTAL && style.swapAxes
+                    val mapper = if (swapAxes) {
+                        // Horizontal bars: value axis runs along X, category axis along Y.
+                        ChartCoordinateMapper(size, niceYRange, xRange, paddingPx)
+                    } else {
+                        ChartCoordinateMapper(size, xRange, niceYRange, paddingPx)
+                    }
 
                     // 1. Grid
-                    drawGrid(yTicks, mapper, effectiveAxisStyle, theme)
+                    drawGrid(yTicks, mapper, effectiveAxisStyle, theme, swapAxes = swapAxes)
 
                     // 2. Axes
-                    drawAxes(xTicks, yTicks, mapper, effectiveAxisStyle, theme, textMeasurer, xLabels)
+                    drawAxes(
+                        xTicks, yTicks, mapper, effectiveAxisStyle, theme, textMeasurer, xLabels,
+                        swapAxes = swapAxes, categoryCount = categoryCount,
+                    )
 
                     // 3. Bars
                     barRects = drawBars(

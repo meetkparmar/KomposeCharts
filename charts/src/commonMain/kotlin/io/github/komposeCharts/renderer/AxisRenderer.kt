@@ -10,6 +10,12 @@ import io.github.komposeCharts.theme.ChartTheme
 
 /**
  * Draws axis lines and tick labels.
+ *
+ * In the default (vertical) layout, [yTicks] are value ticks drawn down the left axis and
+ * [xTicks]/[xLabels] are categories drawn along the bottom axis. When [swapAxes] is true
+ * (horizontal bar charts), the axes are swapped: [yTicks] value labels are drawn along the
+ * bottom axis, and [xLabels] category labels are drawn down the left axis — positioned to match
+ * the renderer's top-to-bottom category layout using [categoryCount].
  */
 internal fun DrawScope.drawAxes(
     xTicks: List<Float>,
@@ -19,6 +25,8 @@ internal fun DrawScope.drawAxes(
     theme: ChartTheme,
     textMeasurer: TextMeasurer,
     xLabels: List<String?>? = null,
+    swapAxes: Boolean = false,
+    categoryCount: Int = 0,
 ) {
     val axisColor = theme.axisLineColor
     val axisStroke = style.axisLineThicknessDp.toPx()
@@ -41,6 +49,19 @@ internal fun DrawScope.drawAxes(
             end = Offset(mapper.plotRight, mapper.plotBottom),
             strokeWidth = axisStroke,
         )
+    }
+
+    if (swapAxes) {
+        drawSwappedAxisLabels(
+            valueTicks = yTicks,
+            categoryLabels = xLabels,
+            categoryCount = categoryCount,
+            mapper = mapper,
+            style = style,
+            theme = theme,
+            textMeasurer = textMeasurer,
+        )
+        return
     }
 
     // Y-axis tick labels
@@ -80,6 +101,59 @@ internal fun DrawScope.drawAxes(
                 topLeft = Offset(
                     x = x - result.size.width / 2f,
                     y = mapper.plotBottom + 4f,
+                ),
+            )
+        }
+    }
+}
+
+/**
+ * Draws axis labels for a horizontal (swapped) bar chart: value ticks along the bottom axis and
+ * category labels down the left axis.
+ *
+ * Category labels are positioned to match the renderer's manual top-to-bottom category layout
+ * (`plotTop + (i + 0.5) * plotHeight / categoryCount`), rather than the mapper's flipped y-axis.
+ */
+private fun DrawScope.drawSwappedAxisLabels(
+    valueTicks: List<Float>,
+    categoryLabels: List<String?>?,
+    categoryCount: Int,
+    mapper: ChartCoordinateMapper,
+    style: AxisStyle,
+    theme: ChartTheme,
+    textMeasurer: TextMeasurer,
+) {
+    // Value tick labels along the bottom (x) axis.
+    if (style.showXLabels) {
+        val formatter = style.yLabelFormatter ?: { v ->
+            if (v == v.toLong().toFloat()) v.toLong().toString() else "${(v * 10).toInt() / 10.0}"
+        }
+        for (tick in valueTicks) {
+            val x = mapper.xToPixel(tick)
+            if (x !in mapper.plotLeft..mapper.plotRight) continue
+            val result = textMeasurer.measure(formatter(tick), style = theme.labelTextStyle)
+            drawText(
+                textLayoutResult = result,
+                topLeft = Offset(
+                    x = x - result.size.width / 2f,
+                    y = mapper.plotBottom + 4f,
+                ),
+            )
+        }
+    }
+
+    // Category labels down the left (y) axis, matching the renderer's top-to-bottom layout.
+    if (style.showYLabels && categoryLabels != null && categoryCount > 0) {
+        val bandHeight = mapper.plotHeight / categoryCount
+        for ((i, label) in categoryLabels.withIndex()) {
+            if (label == null || i >= categoryCount) continue
+            val centerY = mapper.plotTop + (i + 0.5f) * bandHeight
+            val result = textMeasurer.measure(label, style = theme.labelTextStyle)
+            drawText(
+                textLayoutResult = result,
+                topLeft = Offset(
+                    x = mapper.plotLeft - result.size.width - 4f,
+                    y = centerY - result.size.height / 2f,
                 ),
             )
         }

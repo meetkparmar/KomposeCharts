@@ -122,6 +122,7 @@ fun BarChartScreen(
         barGradients = barGradients,
         barStrokeWidth = if (stroke) AppDimen.BorderWidth else AppDimen.Spacing_0dp,
         orientation = if (horizontal) BarOrientation.HORIZONTAL else BarOrientation.VERTICAL,
+        swapAxes = horizontal,
         grouping = if (stacked && multiSeries) BarGrouping.STACKED else BarGrouping.GROUPED,
         axisStyle = AxisStyle(showGrid = gridLines),
         valueLabelPosition = if (valueLabels) ValueLabelPosition.TOP else ValueLabelPosition.NONE,
@@ -162,6 +163,7 @@ fun BarChartScreen(
             appendLine("        .height(220.dp),")
             appendLine("    style = BarChartStyle(")
             if (horizontal) appendLine("        orientation = HORIZONTAL,")
+            if (horizontal) appendLine("        swapAxes = true,")
             if (stacked && multiSeries) appendLine("        grouping = STACKED,")
             if (gridLines) appendLine("        axisStyle = AxisStyle(showGrid = true),")
             if (valueLabels) appendLine("        valueLabelPosition = TOP,")

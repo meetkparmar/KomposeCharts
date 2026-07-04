@@ -82,6 +82,30 @@ class ChartDataTest {
     }
 
     @Test
+    fun isMissing_nanY() {
+        assertTrue(DataPoint(0f, Float.NaN).isMissing)
+        assertTrue(DataPoint.missing(3f).isMissing)
+    }
+
+    @Test
+    fun isMissing_nonFiniteX() {
+        assertTrue(DataPoint(Float.NaN, 5f).isMissing)
+        assertTrue(DataPoint(Float.POSITIVE_INFINITY, 5f).isMissing)
+    }
+
+    @Test
+    fun isMissing_infiniteY() {
+        assertTrue(DataPoint(0f, Float.POSITIVE_INFINITY).isMissing)
+        assertTrue(DataPoint(0f, Float.NEGATIVE_INFINITY).isMissing)
+    }
+
+    @Test
+    fun isMissing_finitePoint_isNotMissing() {
+        assertFalse(DataPoint(0f, 5f).isMissing)
+        assertFalse(DataPoint(-2f, -3f).isMissing)
+    }
+
+    @Test
     fun dataSeries_colorTokenIsOptional() {
         val autoColor = DataSeries("A", emptyList())
         val explicitColor = DataSeries("B", emptyList(), colorToken = 2)

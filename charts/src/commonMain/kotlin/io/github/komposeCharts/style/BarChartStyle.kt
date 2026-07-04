@@ -33,6 +33,13 @@ data class BarChartStyle(
     /** Fraction of group width used as gap between bars within a group (0..1). */
     val barSpacing: Float = 0.05f,
     val orientation: BarOrientation = BarOrientation.VERTICAL,
+    /**
+     * When true and [orientation] is [BarOrientation.HORIZONTAL], swaps the axes so the
+     * value axis runs horizontally (along the bottom) and the category axis runs vertically
+     * (along the left). This is the correct layout for horizontal bar charts; enable it when
+     * using [BarOrientation.HORIZONTAL]. Has no effect for vertical charts.
+     */
+    val swapAxes: Boolean = false,
     val grouping: BarGrouping = BarGrouping.GROUPED,
 
     // --- Labels ---

@@ -125,4 +125,49 @@ class AxisRangeCalculatorTest {
         assertTrue(range.max > range.min)
         assertTrue(ticks.isNotEmpty())
     }
+
+    @Test
+    fun fromData_nanX_isIgnored_doesNotThrow() {
+        // A point with NaN x used to slip past the missing-filter and produce
+        // an invalid AxisRange(MAX, -MAX) that threw in the init block.
+        val data = ChartData(
+            listOf(DataPoint(Float.NaN, 5f), DataPoint(1f, 10f), DataPoint(2f, 20f))
+        )
+        val (xRange, yRange) = AxisRangeCalculator.fromData(data)
+
+        assertEquals(1f, xRange.min)
+        assertEquals(2f, xRange.max)
+        assertTrue(yRange.max > yRange.min)
+    }
+
+    @Test
+    fun fromData_infiniteValues_areIgnored() {
+        val data = ChartData(
+            listOf(
+                DataPoint(Float.POSITIVE_INFINITY, 1f),
+                DataPoint(0f, Float.NEGATIVE_INFINITY),
+                DataPoint(1f, 10f),
+                DataPoint(2f, 30f),
+            )
+        )
+        val (xRange, yRange) = AxisRangeCalculator.fromData(data)
+
+        assertEquals(1f, xRange.min)
+        assertEquals(2f, xRange.max)
+        assertTrue(yRange.max.isFinite() && yRange.min.isFinite())
+        assertEquals(30f, yRange.max)
+    }
+
+    @Test
+    fun fromData_allNonFinite_returnsDefaultRange() {
+        val data = ChartData(
+            listOf(DataPoint(Float.NaN, Float.NaN), DataPoint(0f, Float.POSITIVE_INFINITY))
+        )
+        val (xRange, yRange) = AxisRangeCalculator.fromData(data)
+
+        assertEquals(0f, xRange.min)
+        assertEquals(1f, xRange.max)
+        assertEquals(0f, yRange.min)
+        assertEquals(1f, yRange.max)
+    }
 }

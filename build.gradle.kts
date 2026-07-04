@@ -20,7 +20,6 @@ subprojects {
             "src/androidMain/kotlin",
             "src/desktopMain/kotlin",
             "src/iosMain/kotlin",
-            "src/wasmJsMain/kotlin",
             "src/main/kotlin",
             "src/main/java"
         )

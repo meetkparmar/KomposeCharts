@@ -216,8 +216,11 @@ private fun DrawScope.drawStackedBars(
             val alpha = if (isDimmed) (style.selectionStyle?.dimAlpha ?: 1f) else 1f
 
             val value = if (percentMode && categoryTotals != null) {
+                // Totals are computed from abs values, so each segment's share
+                // must also use abs to keep percentages in [0, 100] when a
+                // series carries negative values.
                 val total = categoryTotals[catIdx]
-                if (total == 0f) 0f else (point.y / total) * 100f
+                if (total == 0f) 0f else (abs(point.y) / total) * 100f
             } else {
                 point.y
             }
