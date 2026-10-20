@@ -47,7 +47,6 @@ kotlin {
                 implementation("io.github.nicosnicolass:core:$remoteVersion")
             } else {
                 implementation(project(":charts"))
-                implementation(project(":core"))
             }
         }
     }

@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.drawText
 import io.github.komposeCharts.internal.ChartCoordinateMapper
+import io.github.komposeCharts.internal.formatChartValue
 import io.github.komposeCharts.style.AxisStyle
 import io.github.komposeCharts.theme.ChartTheme
 
@@ -64,47 +65,9 @@ internal fun DrawScope.drawAxes(
         return
     }
 
-    // Y-axis tick labels
-    if (style.showYLabels) {
-        val formatter = style.yLabelFormatter ?: { v ->
-            if (v == v.toLong().toFloat()) v.toLong().toString() else "${(v * 10).toInt() / 10.0}"
-        }
-        for (tick in yTicks) {
-            val y = mapper.yToPixel(tick)
-            if (y !in mapper.plotTop..mapper.plotBottom) continue
-            val text = formatter(tick)
-            val result = textMeasurer.measure(text, style = theme.labelTextStyle)
-            drawText(
-                textLayoutResult = result,
-                topLeft = Offset(
-                    x = mapper.plotLeft - result.size.width - 4f,
-                    y = y - result.size.height / 2f,
-                ),
-            )
-        }
-    }
+    drawYLabels(yTicks, mapper, style, theme, textMeasurer)
+    drawXLabels(xTicks, xLabels, mapper, style, theme, textMeasurer)
 
-    // X-axis tick labels
-    if (style.showXLabels) {
-        val formatter = style.xLabelFormatter
-        for ((i, tick) in xTicks.withIndex()) {
-            val x = mapper.xToPixel(tick)
-            if (x !in mapper.plotLeft..mapper.plotRight) continue
-            val text = when {
-                xLabels != null && i < xLabels.size && xLabels[i] != null -> xLabels[i]!!
-                formatter != null -> formatter(tick)
-                else -> continue
-            }
-            val result = textMeasurer.measure(text, style = theme.labelTextStyle)
-            drawText(
-                textLayoutResult = result,
-                topLeft = Offset(
-                    x = x - result.size.width / 2f,
-                    y = mapper.plotBottom + 4f,
-                ),
-            )
-        }
-    }
 }
 
 /**
@@ -125,9 +88,7 @@ private fun DrawScope.drawSwappedAxisLabels(
 ) {
     // Value tick labels along the bottom (x) axis.
     if (style.showXLabels) {
-        val formatter = style.yLabelFormatter ?: { v ->
-            if (v == v.toLong().toFloat()) v.toLong().toString() else "${(v * 10).toInt() / 10.0}"
-        }
+        val formatter = style.yLabelFormatter ?: ::formatChartValue
         for (tick in valueTicks) {
             val x = mapper.xToPixel(tick)
             if (x !in mapper.plotLeft..mapper.plotRight) continue
@@ -154,6 +115,57 @@ private fun DrawScope.drawSwappedAxisLabels(
                 topLeft = Offset(
                     x = mapper.plotLeft - result.size.width - 4f,
                     y = centerY - result.size.height / 2f,
+                ),
+            )
+        }
+    }
+}
+
+private fun DrawScope.drawYLabels(
+    yTicks: List<Float>, mapper: ChartCoordinateMapper, style: AxisStyle,
+    theme: ChartTheme, textMeasurer: TextMeasurer,
+) {
+    // Y-axis tick labels
+    if (style.showYLabels) {
+        val formatter = style.yLabelFormatter ?: ::formatChartValue
+        for (tick in yTicks) {
+            val y = mapper.yToPixel(tick)
+            if (y !in mapper.plotTop..mapper.plotBottom) continue
+            val text = formatter(tick)
+            val result = textMeasurer.measure(text, style = theme.labelTextStyle)
+            drawText(
+                textLayoutResult = result,
+                topLeft = Offset(
+                    x = mapper.plotLeft - result.size.width - 4f,
+                    y = y - result.size.height / 2f,
+                ),
+            )
+        }
+    }
+
+}
+
+private fun DrawScope.drawXLabels(
+    xTicks: List<Float>, xLabels: List<String?>?, mapper: ChartCoordinateMapper,
+    style: AxisStyle, theme: ChartTheme, textMeasurer: TextMeasurer,
+) {
+    // X-axis tick labels
+    if (style.showXLabels) {
+        val formatter = style.xLabelFormatter
+        for ((i, tick) in xTicks.withIndex()) {
+            val x = mapper.xToPixel(tick)
+            val text = when {
+                xLabels != null && i < xLabels.size && xLabels[i] != null -> xLabels[i]!!
+                formatter != null -> formatter(tick)
+                else -> null
+            }
+            if (text == null || x !in mapper.plotLeft..mapper.plotRight) continue
+            val result = textMeasurer.measure(text, style = theme.labelTextStyle)
+            drawText(
+                textLayoutResult = result,
+                topLeft = Offset(
+                    x = x - result.size.width / 2f,
+                    y = mapper.plotBottom + 4f,
                 ),
             )
         }

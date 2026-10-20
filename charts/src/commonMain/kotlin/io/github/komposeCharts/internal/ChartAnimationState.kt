@@ -32,7 +32,7 @@ fun rememberChartAnimationState(
     val animatable = remember { Animatable(0f) }
     val state = remember { ChartAnimationState(animatable) }
 
-    LaunchedEffect(dataKey) {
+    LaunchedEffect(dataKey, animation, seriesIndex) {
         if (animation.enabled && animation.durationMs > 0) {
             animatable.snapTo(0f)
             val delay = seriesIndex * animation.staggerMs

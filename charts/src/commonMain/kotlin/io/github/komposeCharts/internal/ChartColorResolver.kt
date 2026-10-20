@@ -27,7 +27,7 @@ internal fun resolveSeriesColor(
 
     // 2. Explicit color token
     series.colorToken?.let { token ->
-        return palette[token % palette.size]
+        return palette[((token % palette.size) + palette.size) % palette.size]
     }
 
     // 3. Theme palette by series index

@@ -1,34 +1,18 @@
 package io.github.komposeCharts.charts
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import io.github.komposeCharts.core.charts.PieMath
 import io.github.komposeCharts.core.data.ChartData
 import io.github.komposeCharts.core.data.DataPoint
-import io.github.komposeCharts.internal.HitTestHelper
-import io.github.komposeCharts.internal.rememberChartAnimationState
-import io.github.komposeCharts.renderer.ChartLegend
-import io.github.komposeCharts.renderer.ChartTooltip
-import io.github.komposeCharts.renderer.SliceArc
-import io.github.komposeCharts.renderer.drawPie
-import io.github.komposeCharts.renderer.pieSliceColor
-import io.github.komposeCharts.style.LegendPosition
+import io.github.komposeCharts.internal.*
+import io.github.komposeCharts.renderer.*
 import io.github.komposeCharts.style.PieChartStyle
 import io.github.komposeCharts.theme.LocalChartTheme
 import kotlin.math.roundToInt
@@ -59,117 +43,30 @@ fun PieChart(
 ) {
     if (data.isEmpty) return
     val series = data.series.firstOrNull() ?: return
-
     val theme = LocalChartTheme.current
-    val textMeasurer = rememberTextMeasurer()
-    val dataKey = data.hashCode()
-
-    val animState = rememberChartAnimationState(style.animation, dataKey, 0)
-    val fraction = animState.fraction
-
-    var hiddenSlices by remember { mutableStateOf(emptySet<Int>()) }
-    var selectedSlice by remember { mutableStateOf<Int?>(null) }
-    var tooltipText by remember { mutableStateOf<String?>(null) }
-
-    // Clear transient selection/tooltip when the underlying data changes.
-    LaunchedEffect(dataKey) {
-        selectedSlice = null
-        tooltipText = null
-    }
-
-    var sliceArcs by remember { mutableStateOf<List<SliceArc>>(emptyList()) }
-
-    // Legend entries map to slices (the first series' points).
-    val sliceColors = remember(series, theme, style.sliceColors) {
-        series.points.indices.map { pieSliceColor(it, style, theme) }
-    }
-    val sliceLabels = remember(series) {
-        series.points.mapIndexed { i, p -> p.label ?: "Slice ${i + 1}" }
-    }
-
-    val legendContent: @Composable () -> Unit = {
-        ChartLegend(
-            labels = sliceLabels,
-            colors = sliceColors,
-            style = style.legendStyle,
-            theme = theme,
-            hiddenSeries = hiddenSlices,
-            onToggle = if (style.legendStyle.interactive) {
-                { idx ->
-                    hiddenSlices = if (idx in hiddenSlices) hiddenSlices - idx else hiddenSlices + idx
+    val measurer = rememberTextMeasurer()
+    val state = rememberChartState(data)
+    val fraction = rememberChartAnimationState(style.animation, data).fraction
+    val colors = series.points.indices.map { pieSliceColor(it, style, theme) }
+    val labels = series.points.mapIndexed { index, point -> point.label ?: "Slice ${index + 1}" }
+    val input = Modifier.chartInput(state) { offset ->
+        val hit = HitTestHelper.hitSlice(offset, state.slices)
+        state.selection = hit?.let { 0 to it.first }
+        state.tooltip = null
+        if (hit != null) {
+            onSliceClick?.invoke(hit.first, hit.second)
+            if (style.tooltipStyle != null) {
+                val values = series.points.mapIndexed { index, point ->
+                    if (index in state.hidden || point.isMissing) 0f else point.y
                 }
-            } else null,
-        )
-    }
-
-    val isLegendLeft = style.legendStyle.position == LegendPosition.LEFT
-    val isLegendRight = style.legendStyle.position == LegendPosition.RIGHT
-    val isLegendTop = style.legendStyle.position == LegendPosition.TOP
-    val isLegendBottom = style.legendStyle.position == LegendPosition.BOTTOM
-
-    Column(modifier = modifier) {
-        if (isLegendTop) legendContent()
-
-        Row(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (isLegendLeft) legendContent()
-
-            Box(modifier = Modifier.weight(1f)) {
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp)
-                        .padding(theme.contentPadding)
-                        .pointerInput(Unit) {
-                            detectTapGestures { offset ->
-                                val hit = HitTestHelper.hitSlice(offset, sliceArcs)
-                                if (hit != null) {
-                                    selectedSlice = hit.first
-                                    onSliceClick?.invoke(hit.first, hit.second)
-                                    style.tooltipStyle?.let {
-                                        val total = series.points
-                                            .filterIndexed { i, _ -> i !in hiddenSlices }
-                                            .sumOf { p -> if (p.isMissing || p.y < 0f) 0.0 else p.y.toDouble() }
-                                            .toFloat()
-                                        val pct = if (total > 0f) (hit.second.y / total * 100f).roundToInt() else 0
-                                        tooltipText = "${hit.second.label ?: "Slice ${hit.first + 1}"}: $pct%"
-                                    }
-                                } else {
-                                    selectedSlice = null
-                                    tooltipText = null
-                                }
-                            }
-                        },
-                ) {
-                    sliceArcs = drawPie(
-                        series = series,
-                        style = style,
-                        fraction = fraction,
-                        theme = theme,
-                        textMeasurer = textMeasurer,
-                        hiddenSlices = hiddenSlices,
-                        selectedSlice = selectedSlice,
-                    )
-                }
-
-                val tooltip = tooltipText
-                val tooltipSty = style.tooltipStyle
-                if (tooltip != null && tooltipSty != null) {
-                    ChartTooltip(
-                        text = tooltip,
-                        style = tooltipSty,
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 8.dp),
-                    )
-                }
+                val share = PieMath.computeSlices(values).getOrNull(hit.first)?.fraction ?: 0f
+                state.tooltip = "${hit.second.label ?: "Slice ${hit.first + 1}"}: ${(share * 100).roundToInt()}%"
             }
-
-            if (isLegendRight) legendContent()
         }
-
-        if (isLegendBottom) legendContent()
+    }
+    ChartFrame(modifier, state, labels, colors, style.legendStyle, style.tooltipStyle, theme) {
+        Canvas(Modifier.fillMaxWidth().height(250.dp).padding(theme.contentPadding).then(input)) {
+            state.slices = drawPie(series, style, fraction, theme, measurer, state.hidden, state.selection?.second)
+        }
     }
 }

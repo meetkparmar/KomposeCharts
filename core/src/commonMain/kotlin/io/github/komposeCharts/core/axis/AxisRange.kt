@@ -9,14 +9,14 @@ package io.github.komposeCharts.core.axis
 data class AxisRange(val min: Float, val max: Float) {
 
     init {
-        require(max > min) { "max ($max) must be greater than min ($min)" }
+        require(min.isFinite() && max.isFinite() && max > min) { "max ($max) must be greater than min ($min)" }
     }
 
     /** The total span of the range (max - min). */
     val span: Float get() = max - min
 
     /** Normalizes [value] into [0, 1] within this range. Values outside the range produce values outside [0, 1]. */
-    fun normalize(value: Float): Float = (value - min) / span
+    fun normalize(value: Float): Float = ((value.toDouble() - min) / (max.toDouble() - min)).toFloat()
 
     /** Clamps [value] to lie within [min, max]. */
     fun clamp(value: Float): Float = value.coerceIn(min, max)

@@ -19,7 +19,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-private const val DEG_TO_RAD = (kotlin.math.PI / 180.0).toFloat()
+private const val DegreesToRadians = (kotlin.math.PI / 180.0).toFloat()
 
 /**
  * A rendered slice arc, retained for hit testing and selection.
@@ -62,103 +62,70 @@ internal fun DrawScope.drawPie(
     hiddenSlices: Set<Int>,
     selectedSlice: Int?,
 ): List<SliceArc> {
-    val values = series.points.mapIndexed { i, p ->
-        if (i in hiddenSlices || p.isMissing) 0f else p.y
-    }
+    val values = series.points.mapIndexed { i, p -> if (i in hiddenSlices || p.isMissing) 0f else p.y }
     val slices = PieMath.computeSlices(values, style.startAngle)
-    if (slices.isEmpty()) return emptyList()
-
     val center = Offset(size.width / 2f, size.height / 2f)
-    val outerRadius = min(size.width, size.height) / 2f * 0.85f
-    val innerRadius = if (style.donut) outerRadius * style.innerRadiusFraction else 0f
-    val explodePx = 8.dp.toPx()
-
-    val revealEnd = style.startAngle + 360f * fraction
-    val arcs = mutableListOf<SliceArc>()
-
-    for (slice in slices) {
-        if (slice.sweepAngle <= 0f) continue
-        val point = series.points[slice.index]
-        val drawnSweep = (revealEnd - slice.startAngle).coerceIn(0f, slice.sweepAngle)
-        if (drawnSweep <= 0f) {
-            arcs.add(SliceArc(slice.index, point, slice.startAngle, slice.sweepAngle, center, outerRadius, innerRadius))
-            continue
-        }
-
-        val color = pieSliceColor(slice.index, style, theme)
-        val midAngleRad = (slice.startAngle + slice.sweepAngle / 2f) * DEG_TO_RAD
-
-        // Explode the selected slice outward along its mid-angle.
-        val drawCenter = if (selectedSlice == slice.index && style.selectionStyle != null) {
-            Offset(center.x + cos(midAngleRad) * explodePx, center.y + sin(midAngleRad) * explodePx)
-        } else {
-            center
-        }
-
-        if (innerRadius > 0f) {
-            // Donut: stroke an arc along the mid-radius ring.
-            val midRadius = (outerRadius + innerRadius) / 2f
-            val ringWidth = outerRadius - innerRadius
-            drawArc(
-                color = color,
-                startAngle = slice.startAngle,
-                sweepAngle = drawnSweep,
-                useCenter = false,
-                topLeft = Offset(drawCenter.x - midRadius, drawCenter.y - midRadius),
-                size = Size(midRadius * 2f, midRadius * 2f),
-                style = Stroke(width = ringWidth),
-            )
-        } else {
-            // Pie wedge.
-            drawArc(
-                color = color,
-                startAngle = slice.startAngle,
-                sweepAngle = drawnSweep,
-                useCenter = true,
-                topLeft = Offset(drawCenter.x - outerRadius, drawCenter.y - outerRadius),
-                size = Size(outerRadius * 2f, outerRadius * 2f),
-            )
-            // Separator outline.
-            val strokeColor = style.sliceStrokeColor
-            if (strokeColor != null && style.sliceStrokeWidth.toPx() > 0f) {
-                drawArc(
-                    color = strokeColor,
-                    startAngle = slice.startAngle,
-                    sweepAngle = drawnSweep,
-                    useCenter = true,
-                    topLeft = Offset(drawCenter.x - outerRadius, drawCenter.y - outerRadius),
-                    size = Size(outerRadius * 2f, outerRadius * 2f),
-                    style = Stroke(width = style.sliceStrokeWidth.toPx()),
-                )
+    val outer = min(size.width, size.height) / 2f * 0.85f
+    val inner = if (style.donut) outer * style.innerRadiusFraction.coerceIn(0f, 1f) else 0f
+    val revealEnd = style.startAngle + 360f * fraction.coerceIn(0f, 1f)
+    return slices.mapNotNull { slice ->
+        val sweep = (revealEnd - slice.startAngle).coerceIn(0f, slice.sweepAngle)
+        if (sweep <= 0f) null else {
+            val arc = SliceArc(slice.index, series.points[slice.index], slice.startAngle, sweep, center, outer, inner)
+            val angle = (slice.startAngle + slice.sweepAngle / 2f) * DegreesToRadians
+            val drawCenter = if (selectedSlice == slice.index && style.selectionStyle != null) {
+                center + Offset(cos(angle), sin(angle)) * 8.dp.toPx()
+            } else center
+            drawSlice(arc.copy(center = drawCenter), style, theme)
+            if (style.showLabels && slice.sweepAngle >= 8f && sweep >= slice.sweepAngle) {
+                drawSliceLabel(arc.copy(center = drawCenter), angle, slice.fraction, style, theme, textMeasurer)
             }
+            arc
         }
-
-        // Label (only once the slice is fully revealed and large enough to read).
-        if (style.showLabels && slice.sweepAngle >= 8f && drawnSweep >= slice.sweepAngle) {
-            val labelRadius = if (innerRadius > 0f) (innerRadius + outerRadius) / 2f else outerRadius * 0.62f
-            val labelText = pieLabelText(style.labelType, point, slice.fraction)
-            if (labelText.isNotEmpty()) {
-                val result = textMeasurer.measure(labelText, style = theme.labelTextStyle.copy(color = Color.White))
-                val lx = drawCenter.x + cos(midAngleRad) * labelRadius - result.size.width / 2f
-                val ly = drawCenter.y + sin(midAngleRad) * labelRadius - result.size.height / 2f
-                drawText(textLayoutResult = result, topLeft = Offset(lx, ly))
-            }
-        }
-
-        arcs.add(SliceArc(slice.index, point, slice.startAngle, slice.sweepAngle, center, outerRadius, innerRadius))
     }
+}
 
-    return arcs
+private fun DrawScope.drawSlice(arc: SliceArc, style: PieChartStyle, theme: ChartTheme) {
+    val color = pieSliceColor(arc.index, style, theme)
+    if (arc.innerRadius > 0f) {
+        val radius = (arc.outerRadius + arc.innerRadius) / 2f
+        drawArc(
+            color, arc.startAngle, arc.sweepAngle, false,
+            arc.center - Offset(radius, radius), Size(radius * 2f, radius * 2f),
+            style = Stroke(arc.outerRadius - arc.innerRadius),
+        )
+    } else {
+        val topLeft = arc.center - Offset(arc.outerRadius, arc.outerRadius)
+        val size = Size(arc.outerRadius * 2f, arc.outerRadius * 2f)
+        drawArc(color, arc.startAngle, arc.sweepAngle, true, topLeft, size)
+        val stroke = style.sliceStrokeColor
+        if (stroke != null && style.sliceStrokeWidth.toPx() > 0f) {
+            drawArc(stroke, arc.startAngle, arc.sweepAngle, true, topLeft, size, style = Stroke(style.sliceStrokeWidth.toPx()))
+        }
+    }
+}
+
+private fun DrawScope.drawSliceLabel(
+    arc: SliceArc,
+    angle: Float,
+    fraction: Float,
+    style: PieChartStyle,
+    theme: ChartTheme,
+    textMeasurer: TextMeasurer,
+) {
+    val radius = if (arc.innerRadius > 0f) (arc.innerRadius + arc.outerRadius) / 2f else arc.outerRadius * 0.62f
+    val text = pieLabelText(style.labelType, arc.point, fraction)
+    if (text.isEmpty()) return
+    val result = textMeasurer.measure(text, style = theme.labelTextStyle.copy(color = Color.White))
+    val x = arc.center.x + cos(angle) * radius - result.size.width / 2f
+    val y = arc.center.y + sin(angle) * radius - result.size.height / 2f
+    drawText(result, topLeft = Offset(x, y))
 }
 
 private fun pieLabelText(type: PieLabelType, point: DataPoint, fraction: Float): String {
     val pct = "${(fraction * 100f).roundToInt()}%"
     val name = point.label ?: ""
-    val value = if (point.y == point.y.toLong().toFloat()) {
-        point.y.toLong().toString()
-    } else {
-        "${(point.y * 10).toInt() / 10.0}"
-    }
+    val value = io.github.komposeCharts.internal.formatChartValue(point.y)
     return when (type) {
         PieLabelType.PERCENT -> pct
         PieLabelType.VALUE -> value

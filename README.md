@@ -16,11 +16,18 @@ A Kotlin Multiplatform + Compose Multiplatform chart library — beautiful, anim
 |---|---|
 | `:core` | Pure Kotlin — data models, axis math, animation config. Zero Compose dependency. |
 | `:charts` | Compose Multiplatform chart composables (rendering, theming, animations). |
-| `:sample:composeApp` | KMP sample app demonstrating the library on all platforms. |
+| `:samples:common` | Shared interactive chart demos. |
+| `:samples:android` | Android sample host. |
+| `:samples:desktop` | Desktop JVM sample host. |
+| `:samples:ios` | Kotlin framework for the SwiftUI sample host. |
 
 ## Status
 
-Under active development — v0.1.0 in progress.
+Under active development. The configured library version is `0.2.0`; this is not a claim of a published release.
+
+See [project documentation](documents/README.md) for architecture, setup, and validation results.
+
+Local consumers can depend on `:charts`; its public `:core` data types are exposed transitively.
 
 ## License
 

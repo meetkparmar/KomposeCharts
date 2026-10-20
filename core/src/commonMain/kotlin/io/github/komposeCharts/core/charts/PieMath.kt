@@ -25,20 +25,21 @@ object PieMath {
     /**
      * Converts raw [values] into cumulative [PieSlice]s.
      *
-     * Negative and NaN values are treated as zero. Index alignment with the input
+     * Negative and non-finite values are treated as zero. Index alignment with the input
      * is preserved, so a zero-value slice still appears (with a zero sweep) at its
      * original index. Returns an empty list when the total is not positive.
      *
      * @param startAngle Angle of the first slice's start edge, in degrees.
      */
     fun computeSlices(values: List<Float>, startAngle: Float = -90f): List<PieSlice> {
-        val sanitized = values.map { if (it.isNaN() || it < 0f) 0f else it }
-        val total = sanitized.sum()
+        require(startAngle.isFinite()) { "startAngle must be finite" }
+        val sanitized = values.map { if (!it.isFinite() || it < 0f) 0f else it }
+        val total = sanitized.sumOf { it.toDouble() }
         if (total <= 0f) return emptyList()
 
         var angle = startAngle
         return sanitized.mapIndexed { i, v ->
-            val fraction = v / total
+            val fraction = (v.toDouble() / total).toFloat()
             val sweep = fraction * 360f
             val slice = PieSlice(i, v, fraction, angle, sweep)
             angle += sweep

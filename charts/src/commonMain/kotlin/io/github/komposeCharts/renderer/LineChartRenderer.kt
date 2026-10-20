@@ -12,20 +12,15 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.unit.dp
 import io.github.komposeCharts.core.data.ChartData
 import io.github.komposeCharts.core.data.DataPoint
+import io.github.komposeCharts.core.data.DataSeries
+import io.github.komposeCharts.internal.ChartHit
+import io.github.komposeCharts.internal.lineGeometry
 import io.github.komposeCharts.internal.ChartCoordinateMapper
 import io.github.komposeCharts.internal.resolveSeriesColor
 import io.github.komposeCharts.style.LineChartStyle
 import io.github.komposeCharts.style.MarkerShape
 import io.github.komposeCharts.theme.ChartTheme
 
-/**
- * Renders line series (with optional markers and area fill) onto the canvas
- * and returns hit-test rectangles for each visible data point.
- *
- * Entry animation is a left-to-right reveal driven by per-series [fractions].
- *
- * @return List of (seriesIndex, dataPoint, boundingRect) for hit testing.
- */
 internal fun DrawScope.drawLines(
     data: ChartData,
     mapper: ChartCoordinateMapper,
@@ -33,110 +28,70 @@ internal fun DrawScope.drawLines(
     fractions: List<Float>,
     theme: ChartTheme,
     selectedPoint: Pair<Int, Int>? = null,
-): List<Triple<Int, DataPoint, Rect>> {
-    val rects = mutableListOf<Triple<Int, DataPoint, Rect>>()
-    val lineWidthPx = style.lineWidth.toPx()
-    val markerRadiusPx = style.markerSize.toPx()
-    val hitRadiusPx = maxOf(markerRadiusPx, 12.dp.toPx())
-
-    data.series.forEachIndexed { sIdx, series ->
-        val color = resolveSeriesColor(sIdx, series, theme, style.lineColors)
-        val fraction = fractions.getOrElse(sIdx) { 1f }
-        val seriesDimmed = selectedPoint != null &&
-            style.selectionStyle != null &&
-            selectedPoint.first != sIdx
-        val seriesAlpha = if (seriesDimmed) style.selectionStyle!!.dimAlpha else 1f
-
-        // Group contiguous non-missing points into runs (gaps break the line).
-        val runs = mutableListOf<List<DataPoint>>()
-        var current = mutableListOf<DataPoint>()
-        for (p in series.points) {
-            if (p.isMissing) {
-                if (current.isNotEmpty()) { runs.add(current); current = mutableListOf() }
-            } else {
-                current.add(p)
-            }
-        }
-        if (current.isNotEmpty()) runs.add(current)
-
-        // Reveal clip: left-to-right.
-        val revealRight = mapper.plotLeft + mapper.plotWidth * fraction
-        clipRect(right = revealRight.coerceAtLeast(mapper.plotLeft)) {
-            for (run in runs) {
-                val offsets = run.map { mapper.toOffset(it) }
-                if (offsets.isEmpty()) continue
-
-                val linePath = buildLinePath(offsets, style.smooth)
-
-                // Area fill below the line.
-                if (style.areaFill && offsets.size >= 1) {
-                    val areaPath = Path().apply {
-                        addPath(linePath)
-                        lineTo(offsets.last().x, mapper.baselineY)
-                        lineTo(offsets.first().x, mapper.baselineY)
-                        close()
-                    }
-                    val brush = Brush.verticalGradient(
-                        colors = listOf(color.copy(alpha = style.areaAlpha), Color.Transparent),
-                        startY = mapper.plotTop,
-                        endY = mapper.baselineY,
-                    )
-                    drawPath(areaPath, brush, alpha = seriesAlpha)
-                }
-
-                // Line stroke.
-                if (offsets.size >= 2) {
-                    drawPath(
-                        linePath,
-                        color,
-                        alpha = seriesAlpha,
-                        style = Stroke(width = lineWidthPx),
-                    )
-                }
-
-                // Markers.
-                if (style.showMarkers) {
-                    for (offset in offsets) {
-                        drawMarker(offset, markerRadiusPx, style.markerShape, color, seriesAlpha)
-                    }
+): List<ChartHit> {
+    data.series.forEachIndexed { index, series ->
+        val color = resolveSeriesColor(index, series, theme, style.lineColors)
+        val dimmed = selectedPoint != null && selectedPoint.first != index
+        val alpha = if (dimmed) style.selectionStyle?.dimAlpha ?: 1f else style.selectionStyle?.highlightAlpha ?: 1f
+        val right = mapper.plotLeft + mapper.plotWidth * fractions.getOrElse(index) { 1f }
+        clipRect(right = right.coerceAtLeast(mapper.plotLeft)) {
+            validRuns(series).forEach { run -> drawLineRun(run.map(mapper::toOffset), mapper, style, color, alpha) }
+            if (selectedPoint?.first == index) {
+                series.points.getOrNull(selectedPoint.second)?.takeUnless { it.isMissing }?.let {
+                    drawSelectedPoint(mapper.toOffset(it), style, color)
                 }
             }
-
-            // Selected point highlight (drawn even when markers are off).
-            if (selectedPoint != null && selectedPoint.first == sIdx && style.selectionStyle != null) {
-                val sel = series.points.firstOrNull {
-                    !it.isMissing && it.x.toInt() == selectedPoint.second
-                }
-                if (sel != null) {
-                    val center = mapper.toOffset(sel)
-                    val r = markerRadiusPx * 1.6f
-                    drawCircle(color, radius = r, center = center)
-                    val strokeColor = style.selectionStyle.highlightStrokeColor ?: Color.White
-                    drawCircle(
-                        strokeColor,
-                        radius = r,
-                        center = center,
-                        style = Stroke(width = style.selectionStyle.highlightStrokeWidth.toPx()),
-                    )
-                }
-            }
-        }
-
-        // Hit-test rects (full geometry, independent of reveal clip).
-        for (p in series.points) {
-            if (p.isMissing) continue
-            val o = mapper.toOffset(p)
-            rects.add(
-                Triple(
-                    sIdx,
-                    p,
-                    Rect(o.x - hitRadiusPx, o.y - hitRadiusPx, o.x + hitRadiusPx, o.y + hitRadiusPx),
-                ),
-            )
         }
     }
+    return lineGeometry(data, mapper, style, theme, maxOf(style.markerSize.toPx(), 12.dp.toPx()))
+}
 
-    return rects
+private fun validRuns(series: DataSeries): List<List<DataPoint>> {
+    val runs = mutableListOf<List<DataPoint>>()
+    var current = mutableListOf<DataPoint>()
+    for (point in series.points) {
+        if (point.isMissing) {
+            if (current.isNotEmpty()) runs.add(current)
+            current = mutableListOf()
+        } else current.add(point)
+    }
+    if (current.isNotEmpty()) runs.add(current)
+    return runs
+}
+
+private fun DrawScope.drawLineRun(
+    offsets: List<Offset>,
+    mapper: ChartCoordinateMapper,
+    style: LineChartStyle,
+    color: Color,
+    alpha: Float,
+) {
+    val path = buildLinePath(offsets, style.smooth)
+    if (style.areaFill) {
+        val area = Path().apply {
+            addPath(path)
+            lineTo(offsets.last().x, mapper.baselineY)
+            lineTo(offsets.first().x, mapper.baselineY)
+            close()
+        }
+        val brush = Brush.verticalGradient(
+            listOf(color.copy(alpha = style.areaAlpha), Color.Transparent),
+            startY = mapper.plotTop, endY = maxOf(mapper.plotTop + 1f, mapper.baselineY),
+        )
+        drawPath(area, brush, alpha = alpha)
+    }
+    if (offsets.size >= 2) drawPath(path, color, alpha = alpha, style = Stroke(style.lineWidth.toPx()))
+    if (style.showMarkers) offsets.forEach { drawMarker(it, style.markerSize.toPx(), style.markerShape, color, alpha) }
+}
+
+private fun DrawScope.drawSelectedPoint(center: Offset, style: LineChartStyle, color: Color) {
+    val selection = style.selectionStyle ?: return
+    val radius = style.markerSize.toPx() * 1.6f
+    drawCircle(color, radius, center, alpha = selection.highlightAlpha)
+    drawCircle(
+        selection.highlightStrokeColor ?: Color.White, radius, center,
+        style = Stroke(selection.highlightStrokeWidth.toPx()),
+    )
 }
 
 /** Builds a polyline or smooth-curve path through [offsets]. */

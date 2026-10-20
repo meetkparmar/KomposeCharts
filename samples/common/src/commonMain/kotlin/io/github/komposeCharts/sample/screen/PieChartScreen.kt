@@ -158,7 +158,7 @@ fun PieChartScreen(
                     })
                     KCChip(label = "Labels", active = labels, accent = accent, onToggle = { labels = it })
                     KCChip(label = "Names", active = names, accent = accent, onToggle = { names = it })
-                    KCChip(label = "Legend", active = legend, accent = accent, onToggle = { legend = it })
+                    KCChip(label = "Interactive legend", active = legend, accent = accent, onToggle = { legend = it })
                     KCChip(label = "Tooltip", active = tooltip, accent = accent, onToggle = { tooltip = it })
                 }
             }
