@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased — preparing 0.2.0
+## 0.2.0-rc.1 — candidate under verification
 
-No public release is claimed by this entry. Add a release date only after the published artifacts have been verified.
+Candidate prepared on 2026-10-22. This is not a stable release; remote publication and consumer checks are pending.
 
 ### Added
 
