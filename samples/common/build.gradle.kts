@@ -43,8 +43,7 @@ kotlin {
 
             if (providers.gradleProperty("useRemote").isPresent) {
                 val remoteVersion = providers.gradleProperty("remoteLibraryVersion").get()
-                implementation("io.github.nicosnicolass:charts:$remoteVersion")
-                implementation("io.github.nicosnicolass:core:$remoteVersion")
+                implementation("com.github.meetkparmar.KomposeCharts:charts:$remoteVersion")
             } else {
                 implementation(project(":charts"))
             }

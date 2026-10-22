@@ -33,4 +33,5 @@ kotlin-js-store/
 .claude/
 
 # Docs
-Docs/
+documents/
+AGENTS.md

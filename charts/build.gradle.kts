@@ -10,7 +10,7 @@ plugins {
     id("maven-publish")
 }
 
-group = "io.github.nicosnicolass"
+group = "com.github.meetkparmar.KomposeCharts"
 version = property("libraryVersion") as String
 
 kotlin {
@@ -78,7 +78,7 @@ publishing {
         pom {
             name.set("KomposeCharts")
             description.set("A lightweight, animated Compose Multiplatform charting library")
-            url.set("https://github.com/nicosnicolass/KomposeCharts")
+            url.set("https://github.com/meetkparmar/KomposeCharts")
             licenses {
                 license {
                     name.set("The Apache License, Version 2.0")
@@ -87,14 +87,14 @@ publishing {
             }
             developers {
                 developer {
-                    id.set("nicosnicolass")
+                    id.set("meetkparmar")
                     name.set("Meet Parmar")
                 }
             }
             scm {
-                connection.set("scm:git:git://github.com/nicosnicolass/KomposeCharts.git")
-                developerConnection.set("scm:git:ssh://github.com/nicosnicolass/KomposeCharts.git")
-                url.set("https://github.com/nicosnicolass/KomposeCharts")
+                connection.set("scm:git:https://github.com/meetkparmar/KomposeCharts.git")
+                developerConnection.set("scm:git:ssh://git@github.com/meetkparmar/KomposeCharts.git")
+                url.set("https://github.com/meetkparmar/KomposeCharts")
             }
         }
     }

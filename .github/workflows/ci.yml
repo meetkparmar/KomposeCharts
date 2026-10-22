@@ -1,0 +1,148 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  quality:
+    name: Tests, API, Android, desktop, docs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v5
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platforms;android-35 build-tools;34.0.0
+      - name: Check committed API baselines
+        run: |
+          git ls-files --error-unmatch charts/api/android/charts.api
+          git ls-files --error-unmatch charts/api/desktop/charts.api
+      - name: Test, check, and build
+        run: |
+          xvfb-run -a ./gradlew --no-daemon --no-configuration-cache --stacktrace \
+            :core:desktopTest :charts:desktopTest \
+            :core:detekt :charts:detekt :charts:apiCheck \
+            :samples:android:assembleDebug :samples:android:assembleRelease \
+            :samples:desktop:desktopJar :core:dokkaHtml :charts:dokkaHtml
+      - name: Save test and quality reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-reports
+          path: |
+            core/build/reports/
+            charts/build/reports/
+            core/build/test-results/
+            charts/build/test-results/
+            samples/android/build/reports/
+          if-no-files-found: warn
+      - name: Save API documentation preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-documentation
+          path: |
+            core/build/dokka/html/
+            charts/build/dokka/html/
+          if-no-files-found: error
+
+  publication:
+    name: Complete publication on Linux
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v5
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platforms;android-35 build-tools;34.0.0
+      - name: Build and verify JitPack artifacts
+        env:
+          JITPACK: 'true'
+          VERSION: ci-${{ github.sha }}
+        run: |
+          mkdir -p build
+          bash scripts/publish-jitpack.sh "$PWD/build/ci-maven" 2>&1 | tee build/publication.log
+      - name: Save publication diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publication-diagnostics
+          path: |
+            build/publication.log
+            core/build/publications/
+            charts/build/publications/
+          if-no-files-found: warn
+
+  ios:
+    name: iOS simulator build
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v5
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platforms;android-35 build-tools;34.0.0
+      - name: Build unsigned simulator app
+        run: |
+          mkdir -p build
+          xcodebuild -version
+          xcodebuild -project samples/ios/iosApp/iosApp.xcodeproj \
+            -scheme iosApp -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/ios-ci \
+            CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build/ios-build.log
+      - name: Save iOS build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: build/ios-build.log
+          if-no-files-found: warn
+
+  required:
+    name: Required checks
+    if: always()
+    needs: [quality, publication, ios]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every job to pass
+        env:
+          QUALITY: ${{ needs.quality.result }}
+          PUBLICATION: ${{ needs.publication.result }}
+          IOS: ${{ needs.ios.result }}
+        run: |
+          [[ "$QUALITY" == success && "$PUBLICATION" == success && "$IOS" == success ]]
