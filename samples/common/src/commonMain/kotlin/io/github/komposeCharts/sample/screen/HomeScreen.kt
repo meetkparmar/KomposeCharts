@@ -99,7 +99,7 @@ fun HomeScreen(
                         letterSpacing = AppTypography.TitleTracking,
                     )
                     Text(
-                        text = "sample \u00B7 v0.4.0",
+                        text = "sample \u00B7 Compose Multiplatform",
                         color = AppColors.TextFaint,
                         fontSize = AppTypography.TableHeader,
                         fontFamily = FontFamily.Monospace,

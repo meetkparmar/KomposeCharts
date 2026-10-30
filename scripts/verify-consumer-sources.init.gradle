@@ -1,0 +1,35 @@
+// Verify the documented metadata rule through Gradle's variant resolver.
+allprojects { p ->
+    if (p.path == ':samples:common') {
+        p.afterEvaluate {
+            def version = p.providers.gradleProperty('remoteLibraryVersion').get()
+            def configurations = []
+            ['core', 'charts'].each { library ->
+                ['', '-android', '-desktop', '-iosarm64', '-iossimulatorarm64', '-iosx64'].each { suffix ->
+                    def artifact = library + suffix
+                    def configuration = p.configurations.create('verifySources' + artifact.replace('-', '_')) {
+                        canBeConsumed = false
+                        transitive = false
+                        attributes {
+                            attribute(Category.CATEGORY_ATTRIBUTE, p.objects.named(Category, Category.DOCUMENTATION))
+                            attribute(DocsType.DOCS_TYPE_ATTRIBUTE, p.objects.named(DocsType, DocsType.SOURCES))
+                            attribute(Attribute.of('org.jetbrains.kotlin.platform.type', String), suffix == '' ? 'common' : suffix == '-android' ? 'androidJvm' : suffix == '-desktop' ? 'jvm' : 'native')
+                        }
+                    }
+                    p.dependencies.add(configuration.name, "com.github.meetkparmar.KomposeCharts:${artifact}:${version}")
+                    configurations.add(configuration)
+                }
+            }
+            p.tasks.register('verifyPublishedSources') {
+                doLast {
+                    configurations.each { configuration ->
+                        def files = configuration.resolve()
+                        assert files.size() == 1
+                        assert files.first().name.endsWith('-sources.jar')
+                        println "Resolved sources: ${files.first().name}"
+                    }
+                }
+            }
+        }
+    }
+}

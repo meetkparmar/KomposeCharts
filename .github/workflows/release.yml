@@ -1,0 +1,133 @@
+name: Release
+
+on:
+  push:
+    tags: ['[0-9]*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      stable: ${{ steps.version.outputs.stable }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - id: version
+        env:
+          RELEASE_REF: ${{ github.ref }}
+          RELEASE_VERSION: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          [[ "$RELEASE_REF" == refs/tags/* ]]
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
+          configured=$(sed -n 's/^libraryVersion=//p' gradle.properties)
+          [[ "$configured" == "$RELEASE_VERSION" ]]
+          if [[ "$RELEASE_VERSION" == *-rc.* ]]; then
+            echo 'stable=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'stable=true' >> "$GITHUB_OUTPUT"
+          fi
+
+  ci:
+    needs: version
+    uses: ./.github/workflows/ci.yml
+
+  artifacts:
+    needs: [version, ci]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Verify final downloadable artifacts and source commit
+        env:
+          RELEASE_VERSION: ${{ github.ref_name }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: python3 scripts/verify-remote-publication.py "$RELEASE_VERSION" "$RELEASE_SHA"
+
+  consumers:
+    needs: artifacts
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      ORG_GRADLE_PROJECT_useRemote: 'true'
+      ORG_GRADLE_PROJECT_remoteLibraryVersion: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v5
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platforms;android-35 build-tools;34.0.0
+      - name: Android and desktop downloaded consumers
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a ./gradlew :samples:android:assembleDebug :samples:desktop:desktopJar \
+            :samples:common:desktopTest --no-configuration-cache --no-build-cache
+      - name: Shared metadata and iOS downloaded consumer
+        if: runner.os == 'macOS'
+        run: |
+          ./gradlew -I scripts/verify-consumer-sources.init.gradle :samples:common:verifyPublishedSources \
+            :samples:common:compileCommonMainKotlinMetadata --no-configuration-cache --no-build-cache
+          xcodebuild -project samples/ios/iosApp/iosApp.xcodeproj \
+            -scheme iosApp -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/release-ios CODE_SIGNING_ALLOWED=NO build
+      - name: Save consumer test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-consumer-${{ runner.os }}
+          path: samples/common/build/test-results/
+          if-no-files-found: ignore
+
+  announce:
+    if: needs.version.outputs.stable == 'true'
+    needs: [version, consumers]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Publish verified stable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_VERSION" >/dev/null 2>&1; then
+            echo 'Release already exists; leaving it unchanged.'
+          else
+            mkdir -p build
+            sed "s|](INSTALLATION.md)|](https://github.com/$GITHUB_REPOSITORY/blob/$RELEASE_VERSION/INSTALLATION.md)|g" .github/RELEASE_NOTES.md > build/release-notes.md
+            gh release create "$RELEASE_VERSION" --verify-tag \
+              --title "KomposeCharts $RELEASE_VERSION" --notes-file build/release-notes.md
+          fi
+
+  documentation:
+    needs: announce
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs.yml

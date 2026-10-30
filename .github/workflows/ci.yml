@@ -41,7 +41,7 @@ jobs:
       - name: Test, check, and build
         run: |
           xvfb-run -a ./gradlew --no-daemon --no-configuration-cache --stacktrace \
-            :core:desktopTest :charts:desktopTest \
+            :core:desktopTest :charts:desktopTest :samples:common:desktopTest \
             :core:detekt :charts:detekt :charts:apiCheck \
             :samples:android:assembleDebug :samples:android:assembleRelease \
             :samples:desktop:desktopJar :core:dokkaHtml :charts:dokkaHtml

@@ -14,7 +14,7 @@ Bar, line, pie, and donut charts for Kotlin and Compose Multiplatform. Share you
 
 ## Release status
 
-The configured version is **0.2.0-rc.1**, a pre-release candidate. Public JitPack availability has not been verified. The installation coordinates below describe the intended release; use the local samples until the release is published and tested.
+The configured version is **0.2.0-rc.2**, a pre-release candidate. JitPack installation requires the metadata workaround below for shared Kotlin compilation and source downloads. Stable release verification is in progress.
 
 See the [changelog](CHANGELOG.md) for changes being prepared.
 
@@ -30,7 +30,9 @@ Built with Kotlin 2.1.20 and Compose Multiplatform 1.8.0. Building this reposito
 
 ## Installation
 
-Once a release is available, add JitPack to `settings.gradle.kts`:
+**Required:** follow [the complete JitPack installation guide](INSTALLATION.md), including its `components` workaround in `settings.gradle.kts`. The repository and dependency snippets alone are insufficient because JitPack rewrites source and iOS metadata filenames.
+
+Add JitPack to `settings.gradle.kts`:
 
 ```kotlin
 dependencyResolutionManagement {
@@ -48,7 +50,7 @@ Add the library to your shared module's `build.gradle.kts`:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.github.meetkparmar.KomposeCharts:charts:0.2.0-rc.1")
+            implementation("com.github.meetkparmar.KomposeCharts:charts:0.2.0-rc.2")
         }
     }
 }
