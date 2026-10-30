@@ -63,9 +63,9 @@ This rule affects only `com.github.meetkparmar.KomposeCharts`, preserves normal 
 In a Compose Multiplatform module's `commonMain.dependencies`, add:
 
 ```kotlin
-implementation("com.github.meetkparmar.KomposeCharts:charts:0.2.0-rc.2")
+implementation("com.github.meetkparmar.KomposeCharts:charts:0.2.0")
 ```
 
-This is a candidate version until stable verification finishes. `core` is included transitively. Kotlin/Compose versions and platform requirements are listed in the [README](README.md).
+`core` is included transitively. Kotlin/Compose versions and platform requirements are listed in the [README](README.md).
 
 For a repository checkout, `-PuseRemote -PremoteLibraryVersion=<version>` enables the same installation rule and excludes local SDK projects. Do not add `mavenLocal()` when verifying a release.

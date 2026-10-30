@@ -1,10 +1,8 @@
 # Changelog
 
-## 0.2.0-rc.2 — candidate under verification
+## 0.2.0 — 2026-10-30
 
-Candidate prepared on 2026-10-30. This is not a stable release; final remote verification is pending.
-
-This candidate includes the required JitPack metadata workaround, source-download checks, public consumer tests, and gated release automation.
+JitPack installation requires the metadata workaround in [INSTALLATION.md](INSTALLATION.md). This release includes source-download checks, public consumer tests, and gated release automation.
 
 ### Added
 

@@ -14,16 +14,20 @@ if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-rc\.[0-9]+)?", version):
 base = "https://jitpack.io/com/github/meetkparmar/KomposeCharts"
 
 
-def download(url):
-    for attempt in range(12):
+def download(url, attempts=4):
+    for attempt in range(attempts):
         try:
             with urllib.request.urlopen(url, timeout=45) as response:
                 return response.read()
-        except (urllib.error.URLError, TimeoutError):
-            if attempt == 11:
+        except (urllib.error.URLError, TimeoutError) as error:
+            if attempt == attempts - 1:
                 raise
-            print(f"Waiting for artifact (attempt {attempt + 1}): {url}", flush=True)
-            time.sleep(15)
+            delay = 30
+            if isinstance(error, urllib.error.HTTPError) and error.code == 429:
+                retry_after = error.headers.get("Retry-After", "60")
+                delay = max(60, int(retry_after) if retry_after.isdigit() else 60)
+            print(f"Waiting {delay}s for artifact (attempt {attempt + 1}): {url}", flush=True)
+            time.sleep(delay)
 
 
 def check(name):
@@ -66,7 +70,10 @@ def check(name):
 
 names = [lib + suffix for lib in ("core", "charts") for suffix in
          ("", "-android", "-desktop", "-iosarm64", "-iossimulatorarm64", "-iosx64")]
-with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+# A POM request starts JitPack's build; probing .module files alone can return
+# 404 without starting it. Wait for readiness before requesting platform files.
+download(f"https://jitpack.io/com/github/meetkparmar/KomposeCharts/{version}/KomposeCharts-{version}.pom", attempts=12)
+with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
     for result in pool.map(check, names):
         print(result, flush=True)
 if len(sys.argv) > 2:

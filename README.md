@@ -14,7 +14,7 @@ Bar, line, pie, and donut charts for Kotlin and Compose Multiplatform. Share you
 
 ## Release status
 
-The configured version is **0.2.0-rc.2**, a pre-release candidate. JitPack installation requires the metadata workaround below for shared Kotlin compilation and source downloads. Stable release verification is in progress.
+The release version is **0.2.0**. JitPack installation requires the metadata workaround below for shared Kotlin compilation and source downloads. See the [release checks](https://github.com/meetkparmar/KomposeCharts/actions/workflows/release.yml) for publication status.
 
 See the [changelog](CHANGELOG.md) for changes being prepared.
 
@@ -50,7 +50,7 @@ Add the library to your shared module's `build.gradle.kts`:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.github.meetkparmar.KomposeCharts:charts:0.2.0-rc.2")
+            implementation("com.github.meetkparmar.KomposeCharts:charts:0.2.0")
         }
     }
 }
@@ -104,7 +104,7 @@ Generate and open the reference locally:
 ./gradlew :core:dokkaHtml :charts:dokkaHtml
 ```
 
-Open `charts/build/dokka/html/index.html` for chart APIs and `core/build/dokka/html/index.html` for data types. The [documentation workflow](.github/workflows/docs.yml) is prepared for GitHub Pages. Its planned address is `https://meetkparmar.github.io/KomposeCharts/`; hosting is not yet verified. No build/version badges are shown until their published destinations are verified.
+Open `charts/build/dokka/html/index.html` for chart APIs and `core/build/dokka/html/index.html` for data types. The [documentation workflow](.github/workflows/docs.yml) deploys the tagged API reference to [GitHub Pages](https://meetkparmar.github.io/KomposeCharts/) after the stable release passes its checks.
 
 ## Contributing
 
