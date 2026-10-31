@@ -14,7 +14,7 @@ Bar, line, pie, and donut charts for Kotlin and Compose Multiplatform. Share you
 
 ## Release status
 
-The release version is **0.2.0**. JitPack installation requires the metadata workaround below for shared Kotlin compilation and source downloads. See the [release checks](https://github.com/meetkparmar/KomposeCharts/actions/workflows/release.yml) for publication status.
+The release version is **0.0.1**. JitPack installation requires the metadata workaround below for shared Kotlin compilation and source downloads. See the [release checks](https://github.com/meetkparmar/KomposeCharts/actions/workflows/release.yml) for publication status.
 
 See the [changelog](CHANGELOG.md) for changes being prepared.
 
@@ -50,7 +50,7 @@ Add the library to your shared module's `build.gradle.kts`:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.github.meetkparmar.KomposeCharts:charts:0.2.0")
+            implementation("com.github.meetkparmar.KomposeCharts:charts:0.0.1")
         }
     }
 }

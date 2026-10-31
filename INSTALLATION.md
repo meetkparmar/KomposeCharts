@@ -63,7 +63,7 @@ This rule affects only `com.github.meetkparmar.KomposeCharts`, preserves normal 
 In a Compose Multiplatform module's `commonMain.dependencies`, add:
 
 ```kotlin
-implementation("com.github.meetkparmar.KomposeCharts:charts:0.2.0")
+implementation("com.github.meetkparmar.KomposeCharts:charts:0.0.1")
 ```
 
 `core` is included transitively. Kotlin/Compose versions and platform requirements are listed in the [README](README.md).

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 — 2026-10-30
+## 0.0.1 — 2026-10-31
 
 JitPack installation requires the metadata workaround in [INSTALLATION.md](INSTALLATION.md). This release includes source-download checks, public consumer tests, and gated release automation.
 
